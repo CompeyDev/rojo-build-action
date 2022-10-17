@@ -1,6 +1,3 @@
-
-
-
 <div align="center">
   <h1>Rojo Build Action</h1>
   This action swiftly builds your rojo places, models & assets. 
@@ -36,7 +33,7 @@ jobs:
       - name: Checkout files
         uses: actions/checkout@v3
       - name: Build
-        uses: CompeyDev/rojo-build-action@0.1.1
+        uses: CompeyDev/rojo-build-action@0.1.2
         with:
           output: model
           type: rbxm
