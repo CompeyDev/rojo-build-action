@@ -1,8 +1,8 @@
 name: 'Rojo Build'
 description: 'A GitHub action to automate Rojo project builds.'
 branding:
-  icon: 'activity'
-  color: 'purple'
+  icon: 'code'
+  color: 'white'
 inputs:
   output:  
     description: 'File to write to (excluding file type)'
