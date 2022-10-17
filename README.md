@@ -39,7 +39,7 @@ jobs:
         uses: CompeyDev/rojo-build-action@0.1.0
         with:
           output: model
-          id: rbxm
+          type: rbxm
       - name: Commit and push if there are changes
         run: |-
           git diff
