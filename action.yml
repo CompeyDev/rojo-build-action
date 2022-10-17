@@ -1,0 +1,16 @@
+name: 'Rojo Build'
+description: 'A GitHub action to automate Rojo project builds.'
+branding:
+  icon: 'activity'
+  color: 'purple'
+inputs:
+  output:  
+    description: 'File to write to (excluding file type)'
+    required: true
+  type:  
+    description: 'The type of file to be outputted'
+    default: "rbxlx"
+    required: false
+runs:
+  using: 'node16'
+  main: 'update.js'
