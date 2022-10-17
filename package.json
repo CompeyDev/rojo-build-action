@@ -2,24 +2,27 @@
   "name": "rojo-build-action",
   "version": "0.1.0",
   "description": "A GitHub action to automate Rojo project builds.",
-  "main": "dist/src/index.js",
+  "main": "./src/index.ts",
   "repository": "https://github.com/CompeyDev/rojo-build-action",
   "author": "CompeyDev",
   "license": "MIT",
   "private": false,
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w"
+    "compile": "tsc",
+    "watch": "tsc -w",
+    "build": "ncc build"
   },
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/github": "^5.1.1",
     "axios": "^1.1.3",
+    "download": "^8.0.0",
     "got": "11.8.1",
     "kleur": "^4.1.5",
     "unzip-stream": "^0.3.1"
   },
   "devDependencies": {
+    "@types/download": "^8.0.1",
     "@types/got": "^9.6.12",
     "@types/node": "^18.11.0",
     "@types/unzip-stream": "^0.3.1",

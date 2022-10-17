@@ -99,5 +99,9 @@ __tests__/runner/*
 lib/**/*
 
 # TypeScript build output
-dist
-dist/*
+dist/lib
+dist/src
+dist/utils
+dist/lib/*
+dist/src/*
+dist/utils/*
