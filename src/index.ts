@@ -41,7 +41,7 @@ function main(output: string, type: string) {
 
         if (process.platform == "darwin" || "linux") {
             info("buildProject    ", "Building...")
-            exec(`${path.join(".", "rojo")} build -o ${output}.${type}`, (err, stdout, stderr) => {
+            exec(`./rojo build -o ${output}.${type}`, (err, stdout, stderr) => {
                 execCallback(stdout, stderr, err);
             })
         }

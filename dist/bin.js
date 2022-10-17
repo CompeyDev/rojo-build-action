@@ -25206,7 +25206,7 @@ function main(output, type) {
         }
         if (process.platform == "darwin" || "linux") {
             (0, logger_1.info)("buildProject    ", "Building...");
-            (0, child_process_1.exec)(`${path_1.default.join(".", "rojo")} build -o ${output}.${type}`, (err, stdout, stderr) => {
+            (0, child_process_1.exec)(`./rojo build -o ${output}.${type}`, (err, stdout, stderr) => {
                 execCallback(stdout, stderr, err);
             });
         }
