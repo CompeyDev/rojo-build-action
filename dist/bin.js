@@ -25108,30 +25108,27 @@ async function main() {
     const url = data.download;
     const version = data.version;
     const name = data.artifact_name;
-    // const download = got(url, { isStream: true }).pipe(createWriteStream(`./${name}`));
     (0, logger_1.info)("installRojo     ", `Installing version ${version}...`);
-    // download.on("downloadProgress", ({ transferred, total, percent }) => {
-    //     info("installRojo", `\rInstalled progress: ${transferred}/${total} (${percent}%)`)
-    // });
-    // download.on("finish", () => {
-    //     fs.createReadStream(name)
-    //         .pipe(unzip.Extract({ path: `.` }))
-    //         .on("finish", () => {
-    //             info("installRojo", `Installed ${name}!`)
-    //         })
-    // });
     await (0, download_1.default)(url, name, { extract: true }).then(() => {
         if (process.platform == "linux") {
-            (0, child_process_1.exec)(`mv ${name.split("-linux.zip")[0]}/rojo . && rm -rf ${name}`);
+            (0, child_process_1.exec)(`mv ${name}/rojo . && rm -rf ${name}`);
+            (0, logger_1.success)("installRojo     ", `Installed ${name}!`);
+            // Promise.resolve(true)
+            // return true
         }
         if (process.platform == "darwin") {
-            (0, child_process_1.exec)(`mv ${name.split("-macos.zip")[0]}/rojo . && rm -rf ${name}`);
+            (0, child_process_1.exec)(`mv ${name}/rojo . && rm -rf ${name}`);
+            (0, logger_1.success)("installRojo     ", `Installed ${name}!`);
+            // Promise.resolve(true)
+            // return true
         }
         if (process.platform == "win32") {
             (0, child_process_1.exec)(`move ${path_1.default.join(".", name, "rojo.exe")} . && del /f ${path_1.default.join(".", name)}`);
+            (0, logger_1.success)("installRojo     ", `Installed ${name}!`);
+            // Promise.resolve(true)
+            // return true
         }
     });
-    (0, logger_1.success)("installRojo     ", `Installed ${name}!`);
     Promise.resolve(true);
     return true;
 }
@@ -25213,7 +25210,7 @@ function main(output, type) {
     }
 }
 (0, installRojo_1.default)().then((status) => { if (status == true) {
-    main("test", "rbxlx");
+    main(output, type);
 } });
 
 

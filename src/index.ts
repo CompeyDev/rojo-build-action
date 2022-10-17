@@ -49,5 +49,5 @@ function main(output: string, type: string) {
     }
 }
 
-init().then((status) => { if (status == true) { main("test", "rbxlx"); } });
+init().then((status) => { if (status == true) { main(output, type); } });
 
