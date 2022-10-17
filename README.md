@@ -36,7 +36,7 @@ jobs:
       - name: Checkout files
         uses: actions/checkout@v3
       - name: Build
-        uses: CompeyDev/rojo-build-action@0.1.0
+        uses: CompeyDev/rojo-build-action@0.1.1
         with:
           output: model
           type: rbxm
