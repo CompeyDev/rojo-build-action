@@ -12,7 +12,7 @@ jobs:
       - name: Enter Project Directory
         run: cd dist/test/example
       - name: Build
-        uses: CompeyDev/rojo-build-action@0.1.4
+        uses: CompeyDev/rojo-build-action@latest
         with:
           output: model
           type: rbxm
