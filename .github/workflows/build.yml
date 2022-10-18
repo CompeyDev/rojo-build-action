@@ -16,6 +16,7 @@ jobs:
         with:
           output: model
           type: rbxm
+          working-directory: ./dist/test/example
       - name: Commit and push if there are changes
         run: |-
           git diff
