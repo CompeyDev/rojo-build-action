@@ -8,6 +8,7 @@ import path from 'path';
 
 const output = core.getInput("output")
 const type = core.getInput("type")
+const dir = core.getInput("working-directory")
 
 const execCallback = (stdout: string, stderr: string, err?: ExecException|null) => {
     if (err) {
@@ -34,14 +35,14 @@ function main(output: string, type: string) {
     if (output && type) {
         if (process.platform == "win32") {
             info("buildProject    ", "Building...")
-            exec(`${path.join(".", "rojo.exe")} build -o ${output}.${type}`, (err, stdout, stderr) => {
+            exec(`${path.join(dir, "rojo.exe")} build -o ${output}.${type}`, (err, stdout, stderr) => {
                 execCallback(stdout, stderr, err);
             })
         }
 
         if (process.platform == "darwin" || "linux") {
             info("buildProject    ", "Building...")
-            exec(`./rojo build -o ${output}.${type}`, (err, stdout, stderr) => {
+            exec(`./${path.join(dir, "rojo")} build -o ${output}.${type}`, (err, stdout, stderr) => {
                 execCallback(stdout, stderr, err);
             })
         }
@@ -49,5 +50,5 @@ function main(output: string, type: string) {
     }
 }
 
-init().then((status: boolean) => { if (status == true) { main(output, type); } });
+init().then((status) => { if (status == true) { main(output, type); } });
 
