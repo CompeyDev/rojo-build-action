@@ -35,14 +35,14 @@ function main(output: string, type: string) {
     if (output && type) {
         if (process.platform == "win32") {
             info("buildProject    ", "Building...")
-            exec(`${path.join(dir, "rojo.exe")} build -o ${output}.${type}`, (err, stdout, stderr) => {
+            exec(`cd ${path.join(".", dir)} && ${path.join(".", "rojo.exe")} build -o ${output}.${type}`, (err, stdout, stderr) => {
                 execCallback(stdout, stderr, err);
             })
         }
 
         if (process.platform == "darwin" || "linux") {
             info("buildProject    ", "Building...")
-            exec(`./${path.join(dir, "rojo")} build -o ${output}.${type}`, (err, stdout, stderr) => {
+            exec(`cd ${path.join(".", dir)} && ./${path.join(".", "rojo")} build -o ${output}.${type}`, (err, stdout, stderr) => {
                 execCallback(stdout, stderr, err);
             })
         }
