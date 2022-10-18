@@ -25103,30 +25103,26 @@ const fetchRojoRelease_1 = __importDefault(__nccwpck_require__(5508));
 const download_1 = __importDefault(__nccwpck_require__(7490));
 const child_process_1 = __nccwpck_require__(2081);
 const path_1 = __importDefault(__nccwpck_require__(1017));
+const core_1 = __importDefault(__nccwpck_require__(2186));
 async function main() {
     const data = (await (0, fetchRojoRelease_1.default)());
     const url = data.download;
     const version = data.version;
     const name = data.artifact_name;
+    const dir = core_1.default.getInput("working-directory");
     (0, logger_1.info)("installRojo     ", `Installing version ${version}...`);
     await (0, download_1.default)(url, name, { extract: true }).then(() => {
         if (process.platform == "linux") {
-            (0, child_process_1.exec)(`mv ${name}/rojo . && rm -rf ${name}`);
+            (0, child_process_1.exec)(`mv ${name}/rojo ${dir} && rm -rf ${name}`);
             (0, logger_1.success)("installRojo     ", `Installed ${name}!`);
-            // Promise.resolve(true)
-            // return true
         }
         if (process.platform == "darwin") {
-            (0, child_process_1.exec)(`mv ${name}/rojo . && rm -rf ${name}`);
+            (0, child_process_1.exec)(`mv ${name}/rojo ${dir} && rm -rf ${name}`);
             (0, logger_1.success)("installRojo     ", `Installed ${name}!`);
-            // Promise.resolve(true)
-            // return true
         }
         if (process.platform == "win32") {
-            (0, child_process_1.exec)(`move ${path_1.default.join(".", name, "rojo.exe")} . && del /f ${path_1.default.join(".", name)}`);
+            (0, child_process_1.exec)(`move ${path_1.default.join(".", name, "rojo.exe")} ${dir} && del /f ${path_1.default.join(".", name)}`);
             (0, logger_1.success)("installRojo     ", `Installed ${name}!`);
-            // Promise.resolve(true)
-            // return true
         }
     });
     Promise.resolve(true);
@@ -25176,6 +25172,7 @@ const installRojo_1 = __importDefault(__nccwpck_require__(1013));
 const path_1 = __importDefault(__nccwpck_require__(1017));
 const output = core.getInput("output");
 const type = core.getInput("type");
+const dir = core.getInput("working-directory");
 const execCallback = (stdout, stderr, err) => {
     if (err) {
         (0, logger_1.error)("buildProject    ", `${err.message}`);
@@ -25197,13 +25194,13 @@ function main(output, type) {
     if (output && type) {
         if (process.platform == "win32") {
             (0, logger_1.info)("buildProject    ", "Building...");
-            (0, child_process_1.exec)(`${path_1.default.join(".", "rojo.exe")} build -o ${output}.${type}`, (err, stdout, stderr) => {
+            (0, child_process_1.exec)(`cd ${path_1.default.join(".", dir)} && ${path_1.default.join(".", "rojo.exe")} build -o ${output}.${type}`, (err, stdout, stderr) => {
                 execCallback(stdout, stderr, err);
             });
         }
         if (process.platform == "darwin" || "linux") {
             (0, logger_1.info)("buildProject    ", "Building...");
-            (0, child_process_1.exec)(`./rojo build -o ${output}.${type}`, (err, stdout, stderr) => {
+            (0, child_process_1.exec)(`cd ${path_1.default.join(".", dir)} && ./${path_1.default.join(".", "rojo")} build -o ${output}.${type}`, (err, stdout, stderr) => {
                 execCallback(stdout, stderr, err);
             });
         }
