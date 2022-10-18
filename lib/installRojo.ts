@@ -7,7 +7,7 @@ import fetchRojoRelease from './fetchRojoRelease';
 import download from 'download';
 import { exec } from 'child_process';
 import path from 'path';
-import core from '@actions/core';
+import * as core from '@actions/core';
 
 
 export default async function main(): Promise<boolean | void> {
