@@ -1,8 +1,4 @@
 import { info, success } from '../utils/logger';
-import got from 'got';
-import fs from 'fs';
-import { createWriteStream } from 'fs';
-import unzip from 'unzip-stream';
 import fetchRojoRelease from './fetchRojoRelease';
 import download from 'download';
 import { exec } from 'child_process';
@@ -21,21 +17,25 @@ export default async function main(): Promise<boolean | void> {
 
 
     await download(url, name, { extract: true }).then(() => {
-        if (process.platform == "linux") {
-            exec(`mv ${name}/rojo ${dir} && rm -rf ${name}`)
-            success("installRojo     ", `Installed ${name}!`)
-        }
+      try {
+          if (process.platform == "linux") {
+              exec(`mv ${name}/rojo ${dir} && rm -rf ${name}`)
+              success("installRojo     ", `Installed ${name}!`)
+          }
 
-        if (process.platform == "darwin") {
-            exec(`mv ${name}/rojo ${dir} && rm -rf ${name}`)
-            success("installRojo     ", `Installed ${name}!`)
-        }
+          if (process.platform == "darwin") {
+              exec(`mv ${name}/rojo ${dir} && rm -rf ${name}`)
+              success("installRojo     ", `Installed ${name}!`)
+          }
 
-        if (process.platform == "win32") {
-            exec(`move ${path.join(".", name, "rojo.exe")} ${dir} && del /f ${path.join(".", name)}`)
-            success("installRojo     ", `Installed ${name}!`)
-        }
-
+          if (process.platform == "win32") {
+              exec(`move ${path.join(".", name, "rojo.exe")} ${dir} && del /f ${path.join(".", name)}`)
+              success("installRojo     ", `Installed ${name}!`)
+          }
+      } catch(e) {
+        Promise.resolve(false)
+        return false
+      }
     })
 
     Promise.resolve(true)

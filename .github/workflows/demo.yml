@@ -5,18 +5,22 @@ on:
 jobs:
   status:
     runs-on: ubuntu-latest
-    name: Build Actions Bin
+    name: Build Rojo Project (Demo)
     steps:
       - name: Checkout files
         uses: actions/checkout@v3
-      - name: Install Dependencies
-        run: "yarn"
-      - name: Build bin
-        run: "rm -rf dist/bin.js && yarn build && mv dist/index.js dist/bin.js"
+      - name: Enter Project Directory
+        run: cd dist/test/example
+      - name: Build
+        uses: CompeyDev/rojo-build-action@main
+        with:
+          output: model
+          type: rbxm
+          working-directory: ./dist/test/example
       - name: Commit and push if there are changes
         run: |-
           git diff
           git config --global user.email "hi@devcomp.xyz"
           git config --global user.name "BuildBot"
           git diff --quiet || (git add -u && git commit -m "chore(deploy): build rojo project")
-          git push
+          git push               

@@ -1762,6 +1762,229 @@ exports.checkBypass = checkBypass;
 
 /***/ }),
 
+/***/ 7678:
+/***/ ((module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const util = __nccwpck_require__(3837);
+const toString = Object.prototype.toString;
+const isOfType = (type) => (value) => typeof value === type; // tslint:disable-line:strict-type-predicates
+const getObjectType = (value) => {
+    const objectName = toString.call(value).slice(8, -1);
+    if (objectName) {
+        return objectName;
+    }
+    return null;
+};
+const isObjectOfType = (typeName) => (value) => {
+    return getObjectType(value) === typeName;
+};
+function is(value) {
+    if (value === null) {
+        return "null" /* null */;
+    }
+    if (value === true || value === false) {
+        return "boolean" /* boolean */;
+    }
+    const type = typeof value;
+    if (type === 'undefined') {
+        return "undefined" /* undefined */;
+    }
+    if (type === 'string') {
+        return "string" /* string */;
+    }
+    if (type === 'number') {
+        return "number" /* number */;
+    }
+    if (type === 'symbol') {
+        return "symbol" /* symbol */;
+    }
+    if (is.function_(value)) {
+        return "Function" /* Function */;
+    }
+    if (Array.isArray(value)) {
+        return "Array" /* Array */;
+    }
+    if (Buffer.isBuffer(value)) {
+        return "Buffer" /* Buffer */;
+    }
+    const tagType = getObjectType(value);
+    if (tagType) {
+        return tagType;
+    }
+    if (value instanceof String || value instanceof Boolean || value instanceof Number) {
+        throw new TypeError('Please don\'t use object wrappers for primitive types');
+    }
+    return "Object" /* Object */;
+}
+(function (is) {
+    const isObject = (value) => typeof value === 'object';
+    // tslint:disable:variable-name
+    is.undefined = isOfType('undefined');
+    is.string = isOfType('string');
+    is.number = isOfType('number');
+    is.function_ = isOfType('function');
+    is.null_ = (value) => value === null;
+    is.class_ = (value) => is.function_(value) && value.toString().startsWith('class ');
+    is.boolean = (value) => value === true || value === false;
+    // tslint:enable:variable-name
+    is.symbol = isOfType('symbol');
+    is.array = Array.isArray;
+    is.buffer = Buffer.isBuffer;
+    is.nullOrUndefined = (value) => is.null_(value) || is.undefined(value);
+    is.object = (value) => !is.nullOrUndefined(value) && (is.function_(value) || isObject(value));
+    is.iterable = (value) => !is.nullOrUndefined(value) && is.function_(value[Symbol.iterator]);
+    is.generator = (value) => is.iterable(value) && is.function_(value.next) && is.function_(value.throw);
+    is.nativePromise = isObjectOfType("Promise" /* Promise */);
+    const hasPromiseAPI = (value) => !is.null_(value) &&
+        isObject(value) &&
+        is.function_(value.then) &&
+        is.function_(value.catch);
+    is.promise = (value) => is.nativePromise(value) || hasPromiseAPI(value);
+    // TODO: Change to use `isObjectOfType` once Node.js 6 or higher is targeted
+    const isFunctionOfType = (type) => (value) => is.function_(value) && is.function_(value.constructor) && value.constructor.name === type;
+    is.generatorFunction = isFunctionOfType('GeneratorFunction');
+    is.asyncFunction = isFunctionOfType('AsyncFunction');
+    is.boundFunction = (value) => is.function_(value) && !value.hasOwnProperty('prototype');
+    is.regExp = isObjectOfType("RegExp" /* RegExp */);
+    is.date = isObjectOfType("Date" /* Date */);
+    is.error = isObjectOfType("Error" /* Error */);
+    is.map = isObjectOfType("Map" /* Map */);
+    is.set = isObjectOfType("Set" /* Set */);
+    is.weakMap = isObjectOfType("WeakMap" /* WeakMap */);
+    is.weakSet = isObjectOfType("WeakSet" /* WeakSet */);
+    is.int8Array = isObjectOfType("Int8Array" /* Int8Array */);
+    is.uint8Array = isObjectOfType("Uint8Array" /* Uint8Array */);
+    is.uint8ClampedArray = isObjectOfType("Uint8ClampedArray" /* Uint8ClampedArray */);
+    is.int16Array = isObjectOfType("Int16Array" /* Int16Array */);
+    is.uint16Array = isObjectOfType("Uint16Array" /* Uint16Array */);
+    is.int32Array = isObjectOfType("Int32Array" /* Int32Array */);
+    is.uint32Array = isObjectOfType("Uint32Array" /* Uint32Array */);
+    is.float32Array = isObjectOfType("Float32Array" /* Float32Array */);
+    is.float64Array = isObjectOfType("Float64Array" /* Float64Array */);
+    is.arrayBuffer = isObjectOfType("ArrayBuffer" /* ArrayBuffer */);
+    is.sharedArrayBuffer = isObjectOfType("SharedArrayBuffer" /* SharedArrayBuffer */);
+    is.dataView = isObjectOfType("DataView" /* DataView */);
+    // TODO: Remove `object` checks when targeting ES2015 or higher
+    // See `Notes`: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getPrototypeOf
+    is.directInstanceOf = (instance, klass) => is.object(instance) && is.object(klass) && Object.getPrototypeOf(instance) === klass.prototype;
+    is.truthy = (value) => Boolean(value);
+    is.falsy = (value) => !value;
+    is.nan = (value) => Number.isNaN(value);
+    const primitiveTypes = new Set([
+        'undefined',
+        'string',
+        'number',
+        'boolean',
+        'symbol'
+    ]);
+    is.primitive = (value) => is.null_(value) || primitiveTypes.has(typeof value);
+    is.integer = (value) => Number.isInteger(value);
+    is.safeInteger = (value) => Number.isSafeInteger(value);
+    is.plainObject = (value) => {
+        // From: https://github.com/sindresorhus/is-plain-obj/blob/master/index.js
+        let prototype;
+        return getObjectType(value) === "Object" /* Object */ &&
+            (prototype = Object.getPrototypeOf(value), prototype === null || // tslint:disable-line:ban-comma-operator
+                prototype === Object.getPrototypeOf({}));
+    };
+    const typedArrayTypes = new Set([
+        "Int8Array" /* Int8Array */,
+        "Uint8Array" /* Uint8Array */,
+        "Uint8ClampedArray" /* Uint8ClampedArray */,
+        "Int16Array" /* Int16Array */,
+        "Uint16Array" /* Uint16Array */,
+        "Int32Array" /* Int32Array */,
+        "Uint32Array" /* Uint32Array */,
+        "Float32Array" /* Float32Array */,
+        "Float64Array" /* Float64Array */
+    ]);
+    is.typedArray = (value) => {
+        const objectType = getObjectType(value);
+        if (objectType === null) {
+            return false;
+        }
+        return typedArrayTypes.has(objectType);
+    };
+    const isValidLength = (value) => is.safeInteger(value) && value > -1;
+    is.arrayLike = (value) => !is.nullOrUndefined(value) && !is.function_(value) && isValidLength(value.length);
+    is.inRange = (value, range) => {
+        if (is.number(range)) {
+            return value >= Math.min(0, range) && value <= Math.max(range, 0);
+        }
+        if (is.array(range) && range.length === 2) {
+            // TODO: Use spread operator here when targeting Node.js 6 or higher
+            return value >= Math.min.apply(null, range) && value <= Math.max.apply(null, range);
+        }
+        throw new TypeError(`Invalid range: ${util.inspect(range)}`);
+    };
+    const NODE_TYPE_ELEMENT = 1;
+    const DOM_PROPERTIES_TO_CHECK = [
+        'innerHTML',
+        'ownerDocument',
+        'style',
+        'attributes',
+        'nodeValue'
+    ];
+    is.domElement = (value) => is.object(value) && value.nodeType === NODE_TYPE_ELEMENT && is.string(value.nodeName) &&
+        !is.plainObject(value) && DOM_PROPERTIES_TO_CHECK.every(property => property in value);
+    is.nodeStream = (value) => !is.nullOrUndefined(value) && isObject(value) && is.function_(value.pipe);
+    is.infinite = (value) => value === Infinity || value === -Infinity;
+    const isAbsoluteMod2 = (value) => (rem) => is.integer(rem) && Math.abs(rem % 2) === value;
+    is.even = isAbsoluteMod2(0);
+    is.odd = isAbsoluteMod2(1);
+    const isWhiteSpaceString = (value) => is.string(value) && /\S/.test(value) === false;
+    const isEmptyStringOrArray = (value) => (is.string(value) || is.array(value)) && value.length === 0;
+    const isEmptyObject = (value) => !is.map(value) && !is.set(value) && is.object(value) && Object.keys(value).length === 0;
+    const isEmptyMapOrSet = (value) => (is.map(value) || is.set(value)) && value.size === 0;
+    is.empty = (value) => is.falsy(value) || isEmptyStringOrArray(value) || isEmptyObject(value) || isEmptyMapOrSet(value);
+    is.emptyOrWhitespace = (value) => is.empty(value) || isWhiteSpaceString(value);
+    const predicateOnArray = (method, predicate, args) => {
+        // `args` is the calling function's "arguments object".
+        // We have to do it this way to keep node v4 support.
+        // So here we convert it to an array and slice off the first item.
+        const values = Array.prototype.slice.call(args, 1);
+        if (is.function_(predicate) === false) {
+            throw new TypeError(`Invalid predicate: ${util.inspect(predicate)}`);
+        }
+        if (values.length === 0) {
+            throw new TypeError('Invalid number of values');
+        }
+        return method.call(values, predicate);
+    };
+    function any(predicate) {
+        return predicateOnArray(Array.prototype.some, predicate, arguments);
+    }
+    is.any = any;
+    function all(predicate) {
+        return predicateOnArray(Array.prototype.every, predicate, arguments);
+    }
+    is.all = all;
+    // tslint:enable:only-arrow-functions no-function-expression
+})(is || (is = {}));
+// Some few keywords are reserved, but we'll populate them for Node.js users
+// See https://github.com/Microsoft/TypeScript/issues/2536
+Object.defineProperties(is, {
+    class: {
+        value: is.class_
+    },
+    function: {
+        value: is.function_
+    },
+    null: {
+        value: is.null_
+    }
+});
+exports["default"] = is;
+// For CommonJS default export support
+module.exports = is;
+module.exports["default"] = is;
+
+
+/***/ }),
+
 /***/ 7088:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -3905,6 +4128,213 @@ module.exports = fill
 
 /***/ }),
 
+/***/ 5993:
+/***/ ((module) => {
+
+"use strict";
+
+module.exports = function (obj) {
+	var ret = {};
+	var keys = Object.keys(Object(obj));
+
+	for (var i = 0; i < keys.length; i++) {
+		ret[keys[i].toLowerCase()] = obj[keys[i]];
+	}
+
+	return ret;
+};
+
+
+/***/ }),
+
+/***/ 8116:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const EventEmitter = __nccwpck_require__(2361);
+const urlLib = __nccwpck_require__(7310);
+const normalizeUrl = __nccwpck_require__(7952);
+const getStream = __nccwpck_require__(1766);
+const CachePolicy = __nccwpck_require__(7282);
+const Response = __nccwpck_require__(9004);
+const lowercaseKeys = __nccwpck_require__(5993);
+const cloneResponse = __nccwpck_require__(1312);
+const Keyv = __nccwpck_require__(1531);
+
+class CacheableRequest {
+	constructor(request, cacheAdapter) {
+		if (typeof request !== 'function') {
+			throw new TypeError('Parameter `request` must be a function');
+		}
+
+		this.cache = new Keyv({
+			uri: typeof cacheAdapter === 'string' && cacheAdapter,
+			store: typeof cacheAdapter !== 'string' && cacheAdapter,
+			namespace: 'cacheable-request'
+		});
+
+		return this.createCacheableRequest(request);
+	}
+
+	createCacheableRequest(request) {
+		return (opts, cb) => {
+			if (typeof opts === 'string') {
+				opts = urlLib.parse(opts);
+			}
+			opts = Object.assign({
+				headers: {},
+				method: 'GET',
+				cache: true,
+				strictTtl: false,
+				automaticFailover: false
+			}, opts);
+			opts.headers = lowercaseKeys(opts.headers);
+
+			const ee = new EventEmitter();
+			const url = normalizeUrl(urlLib.format(opts));
+			const key = `${opts.method}:${url}`;
+			let revalidate = false;
+			let madeRequest = false;
+
+			const makeRequest = opts => {
+				madeRequest = true;
+				const handler = response => {
+					if (revalidate) {
+						const revalidatedPolicy = CachePolicy.fromObject(revalidate.cachePolicy).revalidatedPolicy(opts, response);
+						if (!revalidatedPolicy.modified) {
+							const headers = revalidatedPolicy.policy.responseHeaders();
+							response = new Response(response.statusCode, headers, revalidate.body, revalidate.url);
+							response.cachePolicy = revalidatedPolicy.policy;
+							response.fromCache = true;
+						}
+					}
+
+					if (!response.fromCache) {
+						response.cachePolicy = new CachePolicy(opts, response);
+						response.fromCache = false;
+					}
+
+					let clonedResponse;
+					if (opts.cache && response.cachePolicy.storable()) {
+						clonedResponse = cloneResponse(response);
+						getStream.buffer(response)
+							.then(body => {
+								const value = {
+									cachePolicy: response.cachePolicy.toObject(),
+									url: response.url,
+									statusCode: response.fromCache ? revalidate.statusCode : response.statusCode,
+									body
+								};
+								const ttl = opts.strictTtl ? response.cachePolicy.timeToLive() : undefined;
+								return this.cache.set(key, value, ttl);
+							})
+							.catch(err => ee.emit('error', new CacheableRequest.CacheError(err)));
+					} else if (opts.cache && revalidate) {
+						this.cache.delete(key)
+							.catch(err => ee.emit('error', new CacheableRequest.CacheError(err)));
+					}
+
+					ee.emit('response', clonedResponse || response);
+					if (typeof cb === 'function') {
+						cb(clonedResponse || response);
+					}
+				};
+
+				try {
+					const req = request(opts, handler);
+					ee.emit('request', req);
+				} catch (err) {
+					ee.emit('error', new CacheableRequest.RequestError(err));
+				}
+			};
+
+			const get = opts => Promise.resolve()
+				.then(() => opts.cache ? this.cache.get(key) : undefined)
+				.then(cacheEntry => {
+					if (typeof cacheEntry === 'undefined') {
+						return makeRequest(opts);
+					}
+
+					const policy = CachePolicy.fromObject(cacheEntry.cachePolicy);
+					if (policy.satisfiesWithoutRevalidation(opts)) {
+						const headers = policy.responseHeaders();
+						const response = new Response(cacheEntry.statusCode, headers, cacheEntry.body, cacheEntry.url);
+						response.cachePolicy = policy;
+						response.fromCache = true;
+
+						ee.emit('response', response);
+						if (typeof cb === 'function') {
+							cb(response);
+						}
+					} else {
+						revalidate = cacheEntry;
+						opts.headers = policy.revalidationHeaders(opts);
+						makeRequest(opts);
+					}
+				});
+
+			this.cache.on('error', err => ee.emit('error', new CacheableRequest.CacheError(err)));
+
+			get(opts).catch(err => {
+				if (opts.automaticFailover && !madeRequest) {
+					makeRequest(opts);
+				}
+				ee.emit('error', new CacheableRequest.CacheError(err));
+			});
+
+			return ee;
+		};
+	}
+}
+
+CacheableRequest.RequestError = class extends Error {
+	constructor(err) {
+		super(err.message);
+		this.name = 'RequestError';
+		Object.assign(this, err);
+	}
+};
+
+CacheableRequest.CacheError = class extends Error {
+	constructor(err) {
+		super(err.message);
+		this.name = 'CacheError';
+		Object.assign(this, err);
+	}
+};
+
+module.exports = CacheableRequest;
+
+
+/***/ }),
+
+/***/ 1312:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const PassThrough = (__nccwpck_require__(2781).PassThrough);
+const mimicResponse = __nccwpck_require__(2610);
+
+const cloneResponse = response => {
+	if (!(response && response.pipe)) {
+		throw new TypeError('Parameter `response` must be a response stream.');
+	}
+
+	const clone = new PassThrough();
+	mimicResponse(response, clone);
+
+	return response.pipe(clone);
+};
+
+module.exports = cloneResponse;
+
+
+/***/ }),
+
 /***/ 5443:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -4797,6 +5227,43 @@ module.exports = function (encodedURI) {
 		// Fallback to a more advanced decoder
 		return customDecodeURIComponent(encodedURI);
 	}
+};
+
+
+/***/ }),
+
+/***/ 2391:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const PassThrough = (__nccwpck_require__(2781).PassThrough);
+const zlib = __nccwpck_require__(9796);
+const mimicResponse = __nccwpck_require__(2610);
+
+module.exports = response => {
+	// TODO: Use Array#includes when targeting Node.js 6
+	if (['gzip', 'deflate'].indexOf(response.headers['content-encoding']) === -1) {
+		return response;
+	}
+
+	const unzip = zlib.createUnzip();
+	const stream = new PassThrough();
+
+	mimicResponse(response, stream);
+
+	unzip.on('error', err => {
+		if (err.code === 'Z_BUF_ERROR') {
+			stream.end();
+			return;
+		}
+
+		stream.emit('error', err);
+	});
+
+	response.pipe(unzip).pipe(stream);
+
+	return stream;
 };
 
 
@@ -6693,7 +7160,7 @@ const archiveType = __nccwpck_require__(7088);
 const decompress = __nccwpck_require__(9350);
 const filenamify = __nccwpck_require__(6094);
 const getStream = __nccwpck_require__(2583);
-const got = __nccwpck_require__(6068);
+const got = __nccwpck_require__(3798);
 const makeDir = __nccwpck_require__(9126);
 const pify = __nccwpck_require__(3097);
 const pEvent = __nccwpck_require__(4568);
@@ -6780,591 +7247,6 @@ module.exports = (uri, output, opts) => {
 
 	stream.then = promise.then.bind(promise);
 	stream.catch = promise.catch.bind(promise);
-
-	return stream;
-};
-
-
-/***/ }),
-
-/***/ 1462:
-/***/ ((module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const util = __nccwpck_require__(3837);
-const toString = Object.prototype.toString;
-const isOfType = (type) => (value) => typeof value === type; // tslint:disable-line:strict-type-predicates
-const getObjectType = (value) => {
-    const objectName = toString.call(value).slice(8, -1);
-    if (objectName) {
-        return objectName;
-    }
-    return null;
-};
-const isObjectOfType = (typeName) => (value) => {
-    return getObjectType(value) === typeName;
-};
-function is(value) {
-    if (value === null) {
-        return "null" /* null */;
-    }
-    if (value === true || value === false) {
-        return "boolean" /* boolean */;
-    }
-    const type = typeof value;
-    if (type === 'undefined') {
-        return "undefined" /* undefined */;
-    }
-    if (type === 'string') {
-        return "string" /* string */;
-    }
-    if (type === 'number') {
-        return "number" /* number */;
-    }
-    if (type === 'symbol') {
-        return "symbol" /* symbol */;
-    }
-    if (is.function_(value)) {
-        return "Function" /* Function */;
-    }
-    if (Array.isArray(value)) {
-        return "Array" /* Array */;
-    }
-    if (Buffer.isBuffer(value)) {
-        return "Buffer" /* Buffer */;
-    }
-    const tagType = getObjectType(value);
-    if (tagType) {
-        return tagType;
-    }
-    if (value instanceof String || value instanceof Boolean || value instanceof Number) {
-        throw new TypeError('Please don\'t use object wrappers for primitive types');
-    }
-    return "Object" /* Object */;
-}
-(function (is) {
-    const isObject = (value) => typeof value === 'object';
-    // tslint:disable:variable-name
-    is.undefined = isOfType('undefined');
-    is.string = isOfType('string');
-    is.number = isOfType('number');
-    is.function_ = isOfType('function');
-    is.null_ = (value) => value === null;
-    is.class_ = (value) => is.function_(value) && value.toString().startsWith('class ');
-    is.boolean = (value) => value === true || value === false;
-    // tslint:enable:variable-name
-    is.symbol = isOfType('symbol');
-    is.array = Array.isArray;
-    is.buffer = Buffer.isBuffer;
-    is.nullOrUndefined = (value) => is.null_(value) || is.undefined(value);
-    is.object = (value) => !is.nullOrUndefined(value) && (is.function_(value) || isObject(value));
-    is.iterable = (value) => !is.nullOrUndefined(value) && is.function_(value[Symbol.iterator]);
-    is.generator = (value) => is.iterable(value) && is.function_(value.next) && is.function_(value.throw);
-    is.nativePromise = isObjectOfType("Promise" /* Promise */);
-    const hasPromiseAPI = (value) => !is.null_(value) &&
-        isObject(value) &&
-        is.function_(value.then) &&
-        is.function_(value.catch);
-    is.promise = (value) => is.nativePromise(value) || hasPromiseAPI(value);
-    // TODO: Change to use `isObjectOfType` once Node.js 6 or higher is targeted
-    const isFunctionOfType = (type) => (value) => is.function_(value) && is.function_(value.constructor) && value.constructor.name === type;
-    is.generatorFunction = isFunctionOfType('GeneratorFunction');
-    is.asyncFunction = isFunctionOfType('AsyncFunction');
-    is.boundFunction = (value) => is.function_(value) && !value.hasOwnProperty('prototype');
-    is.regExp = isObjectOfType("RegExp" /* RegExp */);
-    is.date = isObjectOfType("Date" /* Date */);
-    is.error = isObjectOfType("Error" /* Error */);
-    is.map = isObjectOfType("Map" /* Map */);
-    is.set = isObjectOfType("Set" /* Set */);
-    is.weakMap = isObjectOfType("WeakMap" /* WeakMap */);
-    is.weakSet = isObjectOfType("WeakSet" /* WeakSet */);
-    is.int8Array = isObjectOfType("Int8Array" /* Int8Array */);
-    is.uint8Array = isObjectOfType("Uint8Array" /* Uint8Array */);
-    is.uint8ClampedArray = isObjectOfType("Uint8ClampedArray" /* Uint8ClampedArray */);
-    is.int16Array = isObjectOfType("Int16Array" /* Int16Array */);
-    is.uint16Array = isObjectOfType("Uint16Array" /* Uint16Array */);
-    is.int32Array = isObjectOfType("Int32Array" /* Int32Array */);
-    is.uint32Array = isObjectOfType("Uint32Array" /* Uint32Array */);
-    is.float32Array = isObjectOfType("Float32Array" /* Float32Array */);
-    is.float64Array = isObjectOfType("Float64Array" /* Float64Array */);
-    is.arrayBuffer = isObjectOfType("ArrayBuffer" /* ArrayBuffer */);
-    is.sharedArrayBuffer = isObjectOfType("SharedArrayBuffer" /* SharedArrayBuffer */);
-    is.dataView = isObjectOfType("DataView" /* DataView */);
-    // TODO: Remove `object` checks when targeting ES2015 or higher
-    // See `Notes`: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getPrototypeOf
-    is.directInstanceOf = (instance, klass) => is.object(instance) && is.object(klass) && Object.getPrototypeOf(instance) === klass.prototype;
-    is.truthy = (value) => Boolean(value);
-    is.falsy = (value) => !value;
-    is.nan = (value) => Number.isNaN(value);
-    const primitiveTypes = new Set([
-        'undefined',
-        'string',
-        'number',
-        'boolean',
-        'symbol'
-    ]);
-    is.primitive = (value) => is.null_(value) || primitiveTypes.has(typeof value);
-    is.integer = (value) => Number.isInteger(value);
-    is.safeInteger = (value) => Number.isSafeInteger(value);
-    is.plainObject = (value) => {
-        // From: https://github.com/sindresorhus/is-plain-obj/blob/master/index.js
-        let prototype;
-        return getObjectType(value) === "Object" /* Object */ &&
-            (prototype = Object.getPrototypeOf(value), prototype === null || // tslint:disable-line:ban-comma-operator
-                prototype === Object.getPrototypeOf({}));
-    };
-    const typedArrayTypes = new Set([
-        "Int8Array" /* Int8Array */,
-        "Uint8Array" /* Uint8Array */,
-        "Uint8ClampedArray" /* Uint8ClampedArray */,
-        "Int16Array" /* Int16Array */,
-        "Uint16Array" /* Uint16Array */,
-        "Int32Array" /* Int32Array */,
-        "Uint32Array" /* Uint32Array */,
-        "Float32Array" /* Float32Array */,
-        "Float64Array" /* Float64Array */
-    ]);
-    is.typedArray = (value) => {
-        const objectType = getObjectType(value);
-        if (objectType === null) {
-            return false;
-        }
-        return typedArrayTypes.has(objectType);
-    };
-    const isValidLength = (value) => is.safeInteger(value) && value > -1;
-    is.arrayLike = (value) => !is.nullOrUndefined(value) && !is.function_(value) && isValidLength(value.length);
-    is.inRange = (value, range) => {
-        if (is.number(range)) {
-            return value >= Math.min(0, range) && value <= Math.max(range, 0);
-        }
-        if (is.array(range) && range.length === 2) {
-            // TODO: Use spread operator here when targeting Node.js 6 or higher
-            return value >= Math.min.apply(null, range) && value <= Math.max.apply(null, range);
-        }
-        throw new TypeError(`Invalid range: ${util.inspect(range)}`);
-    };
-    const NODE_TYPE_ELEMENT = 1;
-    const DOM_PROPERTIES_TO_CHECK = [
-        'innerHTML',
-        'ownerDocument',
-        'style',
-        'attributes',
-        'nodeValue'
-    ];
-    is.domElement = (value) => is.object(value) && value.nodeType === NODE_TYPE_ELEMENT && is.string(value.nodeName) &&
-        !is.plainObject(value) && DOM_PROPERTIES_TO_CHECK.every(property => property in value);
-    is.nodeStream = (value) => !is.nullOrUndefined(value) && isObject(value) && is.function_(value.pipe);
-    is.infinite = (value) => value === Infinity || value === -Infinity;
-    const isAbsoluteMod2 = (value) => (rem) => is.integer(rem) && Math.abs(rem % 2) === value;
-    is.even = isAbsoluteMod2(0);
-    is.odd = isAbsoluteMod2(1);
-    const isWhiteSpaceString = (value) => is.string(value) && /\S/.test(value) === false;
-    const isEmptyStringOrArray = (value) => (is.string(value) || is.array(value)) && value.length === 0;
-    const isEmptyObject = (value) => !is.map(value) && !is.set(value) && is.object(value) && Object.keys(value).length === 0;
-    const isEmptyMapOrSet = (value) => (is.map(value) || is.set(value)) && value.size === 0;
-    is.empty = (value) => is.falsy(value) || isEmptyStringOrArray(value) || isEmptyObject(value) || isEmptyMapOrSet(value);
-    is.emptyOrWhitespace = (value) => is.empty(value) || isWhiteSpaceString(value);
-    const predicateOnArray = (method, predicate, args) => {
-        // `args` is the calling function's "arguments object".
-        // We have to do it this way to keep node v4 support.
-        // So here we convert it to an array and slice off the first item.
-        const values = Array.prototype.slice.call(args, 1);
-        if (is.function_(predicate) === false) {
-            throw new TypeError(`Invalid predicate: ${util.inspect(predicate)}`);
-        }
-        if (values.length === 0) {
-            throw new TypeError('Invalid number of values');
-        }
-        return method.call(values, predicate);
-    };
-    function any(predicate) {
-        return predicateOnArray(Array.prototype.some, predicate, arguments);
-    }
-    is.any = any;
-    function all(predicate) {
-        return predicateOnArray(Array.prototype.every, predicate, arguments);
-    }
-    is.all = all;
-    // tslint:enable:only-arrow-functions no-function-expression
-})(is || (is = {}));
-// Some few keywords are reserved, but we'll populate them for Node.js users
-// See https://github.com/Microsoft/TypeScript/issues/2536
-Object.defineProperties(is, {
-    class: {
-        value: is.class_
-    },
-    function: {
-        value: is.function_
-    },
-    null: {
-        value: is.null_
-    }
-});
-exports["default"] = is;
-// For CommonJS default export support
-module.exports = is;
-module.exports["default"] = is;
-
-
-/***/ }),
-
-/***/ 2690:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-const PassThrough = (__nccwpck_require__(2781).PassThrough);
-
-module.exports = opts => {
-	opts = Object.assign({}, opts);
-
-	const array = opts.array;
-	let encoding = opts.encoding;
-	const buffer = encoding === 'buffer';
-	let objectMode = false;
-
-	if (array) {
-		objectMode = !(encoding || buffer);
-	} else {
-		encoding = encoding || 'utf8';
-	}
-
-	if (buffer) {
-		encoding = null;
-	}
-
-	let len = 0;
-	const ret = [];
-	const stream = new PassThrough({objectMode});
-
-	if (encoding) {
-		stream.setEncoding(encoding);
-	}
-
-	stream.on('data', chunk => {
-		ret.push(chunk);
-
-		if (objectMode) {
-			len = ret.length;
-		} else {
-			len += chunk.length;
-		}
-	});
-
-	stream.getBufferedValue = () => {
-		if (array) {
-			return ret;
-		}
-
-		return buffer ? Buffer.concat(ret, len) : ret.join('');
-	};
-
-	stream.getBufferedLength = () => len;
-
-	return stream;
-};
-
-
-/***/ }),
-
-/***/ 6108:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-const bufferStream = __nccwpck_require__(2690);
-
-function getStream(inputStream, opts) {
-	if (!inputStream) {
-		return Promise.reject(new Error('Expected a stream'));
-	}
-
-	opts = Object.assign({maxBuffer: Infinity}, opts);
-
-	const maxBuffer = opts.maxBuffer;
-	let stream;
-	let clean;
-
-	const p = new Promise((resolve, reject) => {
-		const error = err => {
-			if (err) { // null check
-				err.bufferedData = stream.getBufferedValue();
-			}
-
-			reject(err);
-		};
-
-		stream = bufferStream(opts);
-		inputStream.once('error', error);
-		inputStream.pipe(stream);
-
-		stream.on('data', () => {
-			if (stream.getBufferedLength() > maxBuffer) {
-				reject(new Error('maxBuffer exceeded'));
-			}
-		});
-		stream.once('error', error);
-		stream.on('end', resolve);
-
-		clean = () => {
-			// some streams doesn't implement the `stream.Readable` interface correctly
-			if (inputStream.unpipe) {
-				inputStream.unpipe(stream);
-			}
-		};
-	});
-
-	p.then(clean, clean);
-
-	return p.then(() => stream.getBufferedValue());
-}
-
-module.exports = getStream;
-module.exports.buffer = (stream, opts) => getStream(stream, Object.assign({}, opts, {encoding: 'buffer'}));
-module.exports.array = (stream, opts) => getStream(stream, Object.assign({}, opts, {array: true}));
-
-
-/***/ }),
-
-/***/ 9880:
-/***/ ((module) => {
-
-"use strict";
-
-module.exports = function (obj) {
-	var ret = {};
-	var keys = Object.keys(Object(obj));
-
-	for (var i = 0; i < keys.length; i++) {
-		ret[keys[i].toLowerCase()] = obj[keys[i]];
-	}
-
-	return ret;
-};
-
-
-/***/ }),
-
-/***/ 1466:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-const EventEmitter = __nccwpck_require__(2361);
-const urlLib = __nccwpck_require__(7310);
-const normalizeUrl = __nccwpck_require__(2306);
-const getStream = __nccwpck_require__(6108);
-const CachePolicy = __nccwpck_require__(8889);
-const Response = __nccwpck_require__(1229);
-const lowercaseKeys = __nccwpck_require__(9880);
-const cloneResponse = __nccwpck_require__(11);
-const Keyv = __nccwpck_require__(5608);
-
-class CacheableRequest {
-	constructor(request, cacheAdapter) {
-		if (typeof request !== 'function') {
-			throw new TypeError('Parameter `request` must be a function');
-		}
-
-		this.cache = new Keyv({
-			uri: typeof cacheAdapter === 'string' && cacheAdapter,
-			store: typeof cacheAdapter !== 'string' && cacheAdapter,
-			namespace: 'cacheable-request'
-		});
-
-		return this.createCacheableRequest(request);
-	}
-
-	createCacheableRequest(request) {
-		return (opts, cb) => {
-			if (typeof opts === 'string') {
-				opts = urlLib.parse(opts);
-			}
-			opts = Object.assign({
-				headers: {},
-				method: 'GET',
-				cache: true,
-				strictTtl: false,
-				automaticFailover: false
-			}, opts);
-			opts.headers = lowercaseKeys(opts.headers);
-
-			const ee = new EventEmitter();
-			const url = normalizeUrl(urlLib.format(opts));
-			const key = `${opts.method}:${url}`;
-			let revalidate = false;
-			let madeRequest = false;
-
-			const makeRequest = opts => {
-				madeRequest = true;
-				const handler = response => {
-					if (revalidate) {
-						const revalidatedPolicy = CachePolicy.fromObject(revalidate.cachePolicy).revalidatedPolicy(opts, response);
-						if (!revalidatedPolicy.modified) {
-							const headers = revalidatedPolicy.policy.responseHeaders();
-							response = new Response(response.statusCode, headers, revalidate.body, revalidate.url);
-							response.cachePolicy = revalidatedPolicy.policy;
-							response.fromCache = true;
-						}
-					}
-
-					if (!response.fromCache) {
-						response.cachePolicy = new CachePolicy(opts, response);
-						response.fromCache = false;
-					}
-
-					let clonedResponse;
-					if (opts.cache && response.cachePolicy.storable()) {
-						clonedResponse = cloneResponse(response);
-						getStream.buffer(response)
-							.then(body => {
-								const value = {
-									cachePolicy: response.cachePolicy.toObject(),
-									url: response.url,
-									statusCode: response.fromCache ? revalidate.statusCode : response.statusCode,
-									body
-								};
-								const ttl = opts.strictTtl ? response.cachePolicy.timeToLive() : undefined;
-								return this.cache.set(key, value, ttl);
-							})
-							.catch(err => ee.emit('error', new CacheableRequest.CacheError(err)));
-					} else if (opts.cache && revalidate) {
-						this.cache.delete(key)
-							.catch(err => ee.emit('error', new CacheableRequest.CacheError(err)));
-					}
-
-					ee.emit('response', clonedResponse || response);
-					if (typeof cb === 'function') {
-						cb(clonedResponse || response);
-					}
-				};
-
-				try {
-					const req = request(opts, handler);
-					ee.emit('request', req);
-				} catch (err) {
-					ee.emit('error', new CacheableRequest.RequestError(err));
-				}
-			};
-
-			const get = opts => Promise.resolve()
-				.then(() => opts.cache ? this.cache.get(key) : undefined)
-				.then(cacheEntry => {
-					if (typeof cacheEntry === 'undefined') {
-						return makeRequest(opts);
-					}
-
-					const policy = CachePolicy.fromObject(cacheEntry.cachePolicy);
-					if (policy.satisfiesWithoutRevalidation(opts)) {
-						const headers = policy.responseHeaders();
-						const response = new Response(cacheEntry.statusCode, headers, cacheEntry.body, cacheEntry.url);
-						response.cachePolicy = policy;
-						response.fromCache = true;
-
-						ee.emit('response', response);
-						if (typeof cb === 'function') {
-							cb(response);
-						}
-					} else {
-						revalidate = cacheEntry;
-						opts.headers = policy.revalidationHeaders(opts);
-						makeRequest(opts);
-					}
-				});
-
-			this.cache.on('error', err => ee.emit('error', new CacheableRequest.CacheError(err)));
-
-			get(opts).catch(err => {
-				if (opts.automaticFailover && !madeRequest) {
-					makeRequest(opts);
-				}
-				ee.emit('error', new CacheableRequest.CacheError(err));
-			});
-
-			return ee;
-		};
-	}
-}
-
-CacheableRequest.RequestError = class extends Error {
-	constructor(err) {
-		super(err.message);
-		this.name = 'RequestError';
-		Object.assign(this, err);
-	}
-};
-
-CacheableRequest.CacheError = class extends Error {
-	constructor(err) {
-		super(err.message);
-		this.name = 'CacheError';
-		Object.assign(this, err);
-	}
-};
-
-module.exports = CacheableRequest;
-
-
-/***/ }),
-
-/***/ 11:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-const PassThrough = (__nccwpck_require__(2781).PassThrough);
-const mimicResponse = __nccwpck_require__(2610);
-
-const cloneResponse = response => {
-	if (!(response && response.pipe)) {
-		throw new TypeError('Parameter `response` must be a response stream.');
-	}
-
-	const clone = new PassThrough();
-	mimicResponse(response, clone);
-
-	return response.pipe(clone);
-};
-
-module.exports = cloneResponse;
-
-
-/***/ }),
-
-/***/ 6018:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-const PassThrough = (__nccwpck_require__(2781).PassThrough);
-const zlib = __nccwpck_require__(9796);
-const mimicResponse = __nccwpck_require__(2610);
-
-module.exports = response => {
-	// TODO: Use Array#includes when targeting Node.js 6
-	if (['gzip', 'deflate'].indexOf(response.headers['content-encoding']) === -1) {
-		return response;
-	}
-
-	const unzip = zlib.createUnzip();
-	const stream = new PassThrough();
-
-	mimicResponse(response, stream);
-
-	unzip.on('error', err => {
-		if (err.code === 'Z_BUF_ERROR') {
-			stream.end();
-			return;
-		}
-
-		stream.emit('error', err);
-	});
-
-	response.pipe(unzip).pipe(stream);
 
 	return stream;
 };
@@ -8554,2023 +8436,6 @@ module.exports.MaxBufferError = MaxBufferError;
 
 /***/ }),
 
-/***/ 9699:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-const urlLib = __nccwpck_require__(7310);
-const http = __nccwpck_require__(3685);
-const PCancelable = __nccwpck_require__(9211);
-const is = __nccwpck_require__(1462);
-
-class GotError extends Error {
-	constructor(message, error, opts) {
-		super(message);
-		Error.captureStackTrace(this, this.constructor);
-		this.name = 'GotError';
-
-		if (!is.undefined(error.code)) {
-			this.code = error.code;
-		}
-
-		Object.assign(this, {
-			host: opts.host,
-			hostname: opts.hostname,
-			method: opts.method,
-			path: opts.path,
-			protocol: opts.protocol,
-			url: opts.href
-		});
-	}
-}
-
-module.exports.GotError = GotError;
-
-module.exports.CacheError = class extends GotError {
-	constructor(error, opts) {
-		super(error.message, error, opts);
-		this.name = 'CacheError';
-	}
-};
-
-module.exports.RequestError = class extends GotError {
-	constructor(error, opts) {
-		super(error.message, error, opts);
-		this.name = 'RequestError';
-	}
-};
-
-module.exports.ReadError = class extends GotError {
-	constructor(error, opts) {
-		super(error.message, error, opts);
-		this.name = 'ReadError';
-	}
-};
-
-module.exports.ParseError = class extends GotError {
-	constructor(error, statusCode, opts, data) {
-		super(`${error.message} in "${urlLib.format(opts)}": \n${data.slice(0, 77)}...`, error, opts);
-		this.name = 'ParseError';
-		this.statusCode = statusCode;
-		this.statusMessage = http.STATUS_CODES[this.statusCode];
-	}
-};
-
-module.exports.HTTPError = class extends GotError {
-	constructor(statusCode, statusMessage, headers, opts) {
-		if (statusMessage) {
-			statusMessage = statusMessage.replace(/\r?\n/g, ' ').trim();
-		} else {
-			statusMessage = http.STATUS_CODES[statusCode];
-		}
-		super(`Response code ${statusCode} (${statusMessage})`, {}, opts);
-		this.name = 'HTTPError';
-		this.statusCode = statusCode;
-		this.statusMessage = statusMessage;
-		this.headers = headers;
-	}
-};
-
-module.exports.MaxRedirectsError = class extends GotError {
-	constructor(statusCode, redirectUrls, opts) {
-		super('Redirected 10 times. Aborting.', {}, opts);
-		this.name = 'MaxRedirectsError';
-		this.statusCode = statusCode;
-		this.statusMessage = http.STATUS_CODES[this.statusCode];
-		this.redirectUrls = redirectUrls;
-	}
-};
-
-module.exports.UnsupportedProtocolError = class extends GotError {
-	constructor(opts) {
-		super(`Unsupported protocol "${opts.protocol}"`, {}, opts);
-		this.name = 'UnsupportedProtocolError';
-	}
-};
-
-module.exports.CancelError = PCancelable.CancelError;
-
-
-/***/ }),
-
-/***/ 6068:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-const EventEmitter = __nccwpck_require__(2361);
-const http = __nccwpck_require__(3685);
-const https = __nccwpck_require__(5687);
-const PassThrough = (__nccwpck_require__(2781).PassThrough);
-const Transform = (__nccwpck_require__(2781).Transform);
-const urlLib = __nccwpck_require__(7310);
-const fs = __nccwpck_require__(7147);
-const querystring = __nccwpck_require__(3477);
-const CacheableRequest = __nccwpck_require__(1466);
-const duplexer3 = __nccwpck_require__(7994);
-const intoStream = __nccwpck_require__(5025);
-const is = __nccwpck_require__(1462);
-const getStream = __nccwpck_require__(8591);
-const timedOut = __nccwpck_require__(9478);
-const urlParseLax = __nccwpck_require__(3194);
-const urlToOptions = __nccwpck_require__(4559);
-const lowercaseKeys = __nccwpck_require__(5649);
-const decompressResponse = __nccwpck_require__(6018);
-const mimicResponse = __nccwpck_require__(2610);
-const isRetryAllowed = __nccwpck_require__(841);
-const isURL = __nccwpck_require__(7064);
-const PCancelable = __nccwpck_require__(9211);
-const pTimeout = __nccwpck_require__(6424);
-const pify = __nccwpck_require__(8154);
-const Buffer = (__nccwpck_require__(1867).Buffer);
-const pkg = __nccwpck_require__(8244);
-const errors = __nccwpck_require__(9699);
-
-const getMethodRedirectCodes = new Set([300, 301, 302, 303, 304, 305, 307, 308]);
-const allMethodRedirectCodes = new Set([300, 303, 307, 308]);
-
-const isFormData = body => is.nodeStream(body) && is.function(body.getBoundary);
-
-const getBodySize = opts => {
-	const body = opts.body;
-
-	if (opts.headers['content-length']) {
-		return Number(opts.headers['content-length']);
-	}
-
-	if (!body && !opts.stream) {
-		return 0;
-	}
-
-	if (is.string(body)) {
-		return Buffer.byteLength(body);
-	}
-
-	if (isFormData(body)) {
-		return pify(body.getLength.bind(body))();
-	}
-
-	if (body instanceof fs.ReadStream) {
-		return pify(fs.stat)(body.path).then(stat => stat.size);
-	}
-
-	if (is.nodeStream(body) && is.buffer(body._buffer)) {
-		return body._buffer.length;
-	}
-
-	return null;
-};
-
-function requestAsEventEmitter(opts) {
-	opts = opts || {};
-
-	const ee = new EventEmitter();
-	const requestUrl = opts.href || urlLib.resolve(urlLib.format(opts), opts.path);
-	const redirects = [];
-	const agents = is.object(opts.agent) ? opts.agent : null;
-	let retryCount = 0;
-	let redirectUrl;
-	let uploadBodySize;
-	let uploaded = 0;
-
-	const get = opts => {
-		if (opts.protocol !== 'http:' && opts.protocol !== 'https:') {
-			ee.emit('error', new got.UnsupportedProtocolError(opts));
-			return;
-		}
-
-		let fn = opts.protocol === 'https:' ? https : http;
-
-		if (agents) {
-			const protocolName = opts.protocol === 'https:' ? 'https' : 'http';
-			opts.agent = agents[protocolName] || opts.agent;
-		}
-
-		if (opts.useElectronNet && process.versions.electron) {
-			const electron = __nccwpck_require__(8299);
-			fn = electron.net || electron.remote.net;
-		}
-
-		let progressInterval;
-
-		const cacheableRequest = new CacheableRequest(fn.request, opts.cache);
-		const cacheReq = cacheableRequest(opts, res => {
-			clearInterval(progressInterval);
-
-			ee.emit('uploadProgress', {
-				percent: 1,
-				transferred: uploaded,
-				total: uploadBodySize
-			});
-
-			const statusCode = res.statusCode;
-
-			res.url = redirectUrl || requestUrl;
-			res.requestUrl = requestUrl;
-
-			const followRedirect = opts.followRedirect && 'location' in res.headers;
-			const redirectGet = followRedirect && getMethodRedirectCodes.has(statusCode);
-			const redirectAll = followRedirect && allMethodRedirectCodes.has(statusCode);
-
-			if (redirectAll || (redirectGet && (opts.method === 'GET' || opts.method === 'HEAD'))) {
-				res.resume();
-
-				if (statusCode === 303) {
-					// Server responded with "see other", indicating that the resource exists at another location,
-					// and the client should request it from that location via GET or HEAD.
-					opts.method = 'GET';
-				}
-
-				if (redirects.length >= 10) {
-					ee.emit('error', new got.MaxRedirectsError(statusCode, redirects, opts), null, res);
-					return;
-				}
-
-				const bufferString = Buffer.from(res.headers.location, 'binary').toString();
-
-				redirectUrl = urlLib.resolve(urlLib.format(opts), bufferString);
-
-				redirects.push(redirectUrl);
-
-				const redirectOpts = Object.assign({}, opts, urlLib.parse(redirectUrl));
-
-				ee.emit('redirect', res, redirectOpts);
-
-				get(redirectOpts);
-
-				return;
-			}
-
-			setImmediate(() => {
-				try {
-					getResponse(res, opts, ee, redirects);
-				} catch (e) {
-					ee.emit('error', e);
-				}
-			});
-		});
-
-		cacheReq.on('error', err => {
-			if (err instanceof CacheableRequest.RequestError) {
-				ee.emit('error', new got.RequestError(err, opts));
-			} else {
-				ee.emit('error', new got.CacheError(err, opts));
-			}
-		});
-
-		cacheReq.once('request', req => {
-			let aborted = false;
-			req.once('abort', _ => {
-				aborted = true;
-			});
-
-			req.once('error', err => {
-				clearInterval(progressInterval);
-
-				if (aborted) {
-					return;
-				}
-
-				const backoff = opts.retries(++retryCount, err);
-
-				if (backoff) {
-					setTimeout(get, backoff, opts);
-					return;
-				}
-
-				ee.emit('error', new got.RequestError(err, opts));
-			});
-
-			ee.once('request', req => {
-				ee.emit('uploadProgress', {
-					percent: 0,
-					transferred: 0,
-					total: uploadBodySize
-				});
-
-				const socket = req.connection;
-				if (socket) {
-					// `._connecting` was the old property which was made public in node v6.1.0
-					const isConnecting = socket.connecting === undefined ? socket._connecting : socket.connecting;
-
-					const onSocketConnect = () => {
-						const uploadEventFrequency = 150;
-
-						progressInterval = setInterval(() => {
-							if (socket.destroyed) {
-								clearInterval(progressInterval);
-								return;
-							}
-
-							const lastUploaded = uploaded;
-							const headersSize = req._header ? Buffer.byteLength(req._header) : 0;
-							uploaded = socket.bytesWritten - headersSize;
-
-							// Prevent the known issue of `bytesWritten` being larger than body size
-							if (uploadBodySize && uploaded > uploadBodySize) {
-								uploaded = uploadBodySize;
-							}
-
-							// Don't emit events with unchanged progress and
-							// prevent last event from being emitted, because
-							// it's emitted when `response` is emitted
-							if (uploaded === lastUploaded || uploaded === uploadBodySize) {
-								return;
-							}
-
-							ee.emit('uploadProgress', {
-								percent: uploadBodySize ? uploaded / uploadBodySize : 0,
-								transferred: uploaded,
-								total: uploadBodySize
-							});
-						}, uploadEventFrequency);
-					};
-
-					// Only subscribe to 'connect' event if we're actually connecting a new
-					// socket, otherwise if we're already connected (because this is a
-					// keep-alive connection) do not bother. This is important since we won't
-					// get a 'connect' event for an already connected socket.
-					if (isConnecting) {
-						socket.once('connect', onSocketConnect);
-					} else {
-						onSocketConnect();
-					}
-				}
-			});
-
-			if (opts.gotTimeout) {
-				clearInterval(progressInterval);
-				timedOut(req, opts.gotTimeout);
-			}
-
-			setImmediate(() => {
-				ee.emit('request', req);
-			});
-		});
-	};
-
-	setImmediate(() => {
-		Promise.resolve(getBodySize(opts))
-			.then(size => {
-				uploadBodySize = size;
-
-				if (
-					is.undefined(opts.headers['content-length']) &&
-					is.undefined(opts.headers['transfer-encoding']) &&
-					isFormData(opts.body)
-				) {
-					opts.headers['content-length'] = size;
-				}
-
-				get(opts);
-			})
-			.catch(err => {
-				ee.emit('error', err);
-			});
-	});
-
-	return ee;
-}
-
-function getResponse(res, opts, ee, redirects) {
-	const downloadBodySize = Number(res.headers['content-length']) || null;
-	let downloaded = 0;
-
-	const progressStream = new Transform({
-		transform(chunk, encoding, callback) {
-			downloaded += chunk.length;
-
-			const percent = downloadBodySize ? downloaded / downloadBodySize : 0;
-
-			// Let flush() be responsible for emitting the last event
-			if (percent < 1) {
-				ee.emit('downloadProgress', {
-					percent,
-					transferred: downloaded,
-					total: downloadBodySize
-				});
-			}
-
-			callback(null, chunk);
-		},
-
-		flush(callback) {
-			ee.emit('downloadProgress', {
-				percent: 1,
-				transferred: downloaded,
-				total: downloadBodySize
-			});
-
-			callback();
-		}
-	});
-
-	mimicResponse(res, progressStream);
-	progressStream.redirectUrls = redirects;
-
-	const response = opts.decompress === true &&
-		is.function(decompressResponse) &&
-		opts.method !== 'HEAD' ? decompressResponse(progressStream) : progressStream;
-
-	if (!opts.decompress && ['gzip', 'deflate'].indexOf(res.headers['content-encoding']) !== -1) {
-		opts.encoding = null;
-	}
-
-	ee.emit('response', response);
-
-	ee.emit('downloadProgress', {
-		percent: 0,
-		transferred: 0,
-		total: downloadBodySize
-	});
-
-	res.pipe(progressStream);
-}
-
-function asPromise(opts) {
-	const timeoutFn = requestPromise => opts.gotTimeout && opts.gotTimeout.request ?
-		pTimeout(requestPromise, opts.gotTimeout.request, new got.RequestError({message: 'Request timed out', code: 'ETIMEDOUT'}, opts)) :
-		requestPromise;
-
-	const proxy = new EventEmitter();
-
-	const cancelable = new PCancelable((resolve, reject, onCancel) => {
-		const ee = requestAsEventEmitter(opts);
-		let cancelOnRequest = false;
-
-		onCancel(() => {
-			cancelOnRequest = true;
-		});
-
-		ee.on('request', req => {
-			if (cancelOnRequest) {
-				req.abort();
-			}
-
-			onCancel(() => {
-				req.abort();
-			});
-
-			if (is.nodeStream(opts.body)) {
-				opts.body.pipe(req);
-				opts.body = undefined;
-				return;
-			}
-
-			req.end(opts.body);
-		});
-
-		ee.on('response', res => {
-			const stream = is.null(opts.encoding) ? getStream.buffer(res) : getStream(res, opts);
-
-			stream
-				.catch(err => reject(new got.ReadError(err, opts)))
-				.then(data => {
-					const statusCode = res.statusCode;
-					const limitStatusCode = opts.followRedirect ? 299 : 399;
-
-					res.body = data;
-
-					if (opts.json && res.body) {
-						try {
-							res.body = JSON.parse(res.body);
-						} catch (err) {
-							if (statusCode >= 200 && statusCode < 300) {
-								throw new got.ParseError(err, statusCode, opts, data);
-							}
-						}
-					}
-
-					if (opts.throwHttpErrors && statusCode !== 304 && (statusCode < 200 || statusCode > limitStatusCode)) {
-						throw new got.HTTPError(statusCode, res.statusMessage, res.headers, opts);
-					}
-
-					resolve(res);
-				})
-				.catch(err => {
-					Object.defineProperty(err, 'response', {value: res});
-					reject(err);
-				});
-		});
-
-		ee.once('error', reject);
-		ee.on('redirect', proxy.emit.bind(proxy, 'redirect'));
-		ee.on('uploadProgress', proxy.emit.bind(proxy, 'uploadProgress'));
-		ee.on('downloadProgress', proxy.emit.bind(proxy, 'downloadProgress'));
-	});
-
-	// Preserve backwards-compatibility
-	// TODO: Remove this in the next major version
-	Object.defineProperty(cancelable, 'canceled', {
-		get() {
-			return cancelable.isCanceled;
-		}
-	});
-
-	const promise = timeoutFn(cancelable);
-
-	promise.cancel = cancelable.cancel.bind(cancelable);
-
-	promise.on = (name, fn) => {
-		proxy.on(name, fn);
-		return promise;
-	};
-
-	return promise;
-}
-
-function asStream(opts) {
-	opts.stream = true;
-
-	const input = new PassThrough();
-	const output = new PassThrough();
-	const proxy = duplexer3(input, output);
-	let timeout;
-
-	if (opts.gotTimeout && opts.gotTimeout.request) {
-		timeout = setTimeout(() => {
-			proxy.emit('error', new got.RequestError({message: 'Request timed out', code: 'ETIMEDOUT'}, opts));
-		}, opts.gotTimeout.request);
-	}
-
-	if (opts.json) {
-		throw new Error('Got can not be used as a stream when the `json` option is used');
-	}
-
-	if (opts.body) {
-		proxy.write = () => {
-			throw new Error('Got\'s stream is not writable when the `body` option is used');
-		};
-	}
-
-	const ee = requestAsEventEmitter(opts);
-
-	ee.on('request', req => {
-		proxy.emit('request', req);
-
-		if (is.nodeStream(opts.body)) {
-			opts.body.pipe(req);
-			return;
-		}
-
-		if (opts.body) {
-			req.end(opts.body);
-			return;
-		}
-
-		if (opts.method === 'POST' || opts.method === 'PUT' || opts.method === 'PATCH') {
-			input.pipe(req);
-			return;
-		}
-
-		req.end();
-	});
-
-	ee.on('response', res => {
-		clearTimeout(timeout);
-
-		const statusCode = res.statusCode;
-
-		res.on('error', err => {
-			proxy.emit('error', new got.ReadError(err, opts));
-		});
-
-		res.pipe(output);
-
-		if (opts.throwHttpErrors && statusCode !== 304 && (statusCode < 200 || statusCode > 299)) {
-			proxy.emit('error', new got.HTTPError(statusCode, res.statusMessage, res.headers, opts), null, res);
-			return;
-		}
-
-		proxy.emit('response', res);
-	});
-
-	ee.on('error', proxy.emit.bind(proxy, 'error'));
-	ee.on('redirect', proxy.emit.bind(proxy, 'redirect'));
-	ee.on('uploadProgress', proxy.emit.bind(proxy, 'uploadProgress'));
-	ee.on('downloadProgress', proxy.emit.bind(proxy, 'downloadProgress'));
-
-	return proxy;
-}
-
-function normalizeArguments(url, opts) {
-	if (!is.string(url) && !is.object(url)) {
-		throw new TypeError(`Parameter \`url\` must be a string or object, not ${is(url)}`);
-	} else if (is.string(url)) {
-		url = url.replace(/^unix:/, 'http://$&');
-
-		try {
-			decodeURI(url);
-		} catch (err) {
-			throw new Error('Parameter `url` must contain valid UTF-8 character sequences');
-		}
-
-		url = urlParseLax(url);
-		if (url.auth) {
-			throw new Error('Basic authentication must be done with the `auth` option');
-		}
-	} else if (isURL.lenient(url)) {
-		url = urlToOptions(url);
-	}
-
-	opts = Object.assign(
-		{
-			path: '',
-			retries: 2,
-			cache: false,
-			decompress: true,
-			useElectronNet: false,
-			throwHttpErrors: true
-		},
-		url,
-		{
-			protocol: url.protocol || 'http:' // Override both null/undefined with default protocol
-		},
-		opts
-	);
-
-	const headers = lowercaseKeys(opts.headers);
-	for (const key of Object.keys(headers)) {
-		if (is.nullOrUndefined(headers[key])) {
-			delete headers[key];
-		}
-	}
-
-	opts.headers = Object.assign({
-		'user-agent': `${pkg.name}/${pkg.version} (https://github.com/sindresorhus/got)`
-	}, headers);
-
-	if (opts.decompress && is.undefined(opts.headers['accept-encoding'])) {
-		opts.headers['accept-encoding'] = 'gzip, deflate';
-	}
-
-	const query = opts.query;
-
-	if (query) {
-		if (!is.string(query)) {
-			opts.query = querystring.stringify(query);
-		}
-
-		opts.path = `${opts.path.split('?')[0]}?${opts.query}`;
-		delete opts.query;
-	}
-
-	if (opts.json && is.undefined(opts.headers.accept)) {
-		opts.headers.accept = 'application/json';
-	}
-
-	const body = opts.body;
-	if (is.nullOrUndefined(body)) {
-		opts.method = (opts.method || 'GET').toUpperCase();
-	} else {
-		const headers = opts.headers;
-		if (!is.nodeStream(body) && !is.string(body) && !is.buffer(body) && !(opts.form || opts.json)) {
-			throw new TypeError('The `body` option must be a stream.Readable, string, Buffer or plain Object');
-		}
-
-		const canBodyBeStringified = is.plainObject(body) || is.array(body);
-		if ((opts.form || opts.json) && !canBodyBeStringified) {
-			throw new TypeError('The `body` option must be a plain Object or Array when the `form` or `json` option is used');
-		}
-
-		if (isFormData(body)) {
-			// Special case for https://github.com/form-data/form-data
-			headers['content-type'] = headers['content-type'] || `multipart/form-data; boundary=${body.getBoundary()}`;
-		} else if (opts.form && canBodyBeStringified) {
-			headers['content-type'] = headers['content-type'] || 'application/x-www-form-urlencoded';
-			opts.body = querystring.stringify(body);
-		} else if (opts.json && canBodyBeStringified) {
-			headers['content-type'] = headers['content-type'] || 'application/json';
-			opts.body = JSON.stringify(body);
-		}
-
-		if (is.undefined(headers['content-length']) && is.undefined(headers['transfer-encoding']) && !is.nodeStream(body)) {
-			const length = is.string(opts.body) ? Buffer.byteLength(opts.body) : opts.body.length;
-			headers['content-length'] = length;
-		}
-
-		// Convert buffer to stream to receive upload progress events
-		// see https://github.com/sindresorhus/got/pull/322
-		if (is.buffer(body)) {
-			opts.body = intoStream(body);
-			opts.body._buffer = body;
-		}
-
-		opts.method = (opts.method || 'POST').toUpperCase();
-	}
-
-	if (opts.hostname === 'unix') {
-		const matches = /(.+?):(.+)/.exec(opts.path);
-
-		if (matches) {
-			opts.socketPath = matches[1];
-			opts.path = matches[2];
-			opts.host = null;
-		}
-	}
-
-	if (!is.function(opts.retries)) {
-		const retries = opts.retries;
-
-		opts.retries = (iter, err) => {
-			if (iter > retries || !isRetryAllowed(err)) {
-				return 0;
-			}
-
-			const noise = Math.random() * 100;
-
-			return ((1 << iter) * 1000) + noise;
-		};
-	}
-
-	if (is.undefined(opts.followRedirect)) {
-		opts.followRedirect = true;
-	}
-
-	if (opts.timeout) {
-		if (is.number(opts.timeout)) {
-			opts.gotTimeout = {request: opts.timeout};
-		} else {
-			opts.gotTimeout = opts.timeout;
-		}
-		delete opts.timeout;
-	}
-
-	return opts;
-}
-
-function got(url, opts) {
-	try {
-		const normalizedArgs = normalizeArguments(url, opts);
-
-		if (normalizedArgs.stream) {
-			return asStream(normalizedArgs);
-		}
-
-		return asPromise(normalizedArgs);
-	} catch (err) {
-		return Promise.reject(err);
-	}
-}
-
-got.stream = (url, opts) => asStream(normalizeArguments(url, opts));
-
-const methods = [
-	'get',
-	'post',
-	'put',
-	'patch',
-	'head',
-	'delete'
-];
-
-for (const method of methods) {
-	got[method] = (url, opts) => got(url, Object.assign({}, opts, {method}));
-	got.stream[method] = (url, opts) => got.stream(url, Object.assign({}, opts, {method}));
-}
-
-Object.assign(got, errors);
-
-module.exports = got;
-
-
-/***/ }),
-
-/***/ 4966:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-const PassThrough = (__nccwpck_require__(2781).PassThrough);
-
-module.exports = opts => {
-	opts = Object.assign({}, opts);
-
-	const array = opts.array;
-	let encoding = opts.encoding;
-	const buffer = encoding === 'buffer';
-	let objectMode = false;
-
-	if (array) {
-		objectMode = !(encoding || buffer);
-	} else {
-		encoding = encoding || 'utf8';
-	}
-
-	if (buffer) {
-		encoding = null;
-	}
-
-	let len = 0;
-	const ret = [];
-	const stream = new PassThrough({objectMode});
-
-	if (encoding) {
-		stream.setEncoding(encoding);
-	}
-
-	stream.on('data', chunk => {
-		ret.push(chunk);
-
-		if (objectMode) {
-			len = ret.length;
-		} else {
-			len += chunk.length;
-		}
-	});
-
-	stream.getBufferedValue = () => {
-		if (array) {
-			return ret;
-		}
-
-		return buffer ? Buffer.concat(ret, len) : ret.join('');
-	};
-
-	stream.getBufferedLength = () => len;
-
-	return stream;
-};
-
-
-/***/ }),
-
-/***/ 8591:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-const bufferStream = __nccwpck_require__(4966);
-
-function getStream(inputStream, opts) {
-	if (!inputStream) {
-		return Promise.reject(new Error('Expected a stream'));
-	}
-
-	opts = Object.assign({maxBuffer: Infinity}, opts);
-
-	const maxBuffer = opts.maxBuffer;
-	let stream;
-	let clean;
-
-	const p = new Promise((resolve, reject) => {
-		const error = err => {
-			if (err) { // null check
-				err.bufferedData = stream.getBufferedValue();
-			}
-
-			reject(err);
-		};
-
-		stream = bufferStream(opts);
-		inputStream.once('error', error);
-		inputStream.pipe(stream);
-
-		stream.on('data', () => {
-			if (stream.getBufferedLength() > maxBuffer) {
-				reject(new Error('maxBuffer exceeded'));
-			}
-		});
-		stream.once('error', error);
-		stream.on('end', resolve);
-
-		clean = () => {
-			// some streams doesn't implement the `stream.Readable` interface correctly
-			if (inputStream.unpipe) {
-				inputStream.unpipe(stream);
-			}
-		};
-	});
-
-	p.then(clean, clean);
-
-	return p.then(() => stream.getBufferedValue());
-}
-
-module.exports = getStream;
-module.exports.buffer = (stream, opts) => getStream(stream, Object.assign({}, opts, {encoding: 'buffer'}));
-module.exports.array = (stream, opts) => getStream(stream, Object.assign({}, opts, {array: true}));
-
-
-/***/ }),
-
-/***/ 8154:
-/***/ ((module) => {
-
-"use strict";
-
-
-const processFn = (fn, opts) => function () {
-	const P = opts.promiseModule;
-	const args = new Array(arguments.length);
-
-	for (let i = 0; i < arguments.length; i++) {
-		args[i] = arguments[i];
-	}
-
-	return new P((resolve, reject) => {
-		if (opts.errorFirst) {
-			args.push(function (err, result) {
-				if (opts.multiArgs) {
-					const results = new Array(arguments.length - 1);
-
-					for (let i = 1; i < arguments.length; i++) {
-						results[i - 1] = arguments[i];
-					}
-
-					if (err) {
-						results.unshift(err);
-						reject(results);
-					} else {
-						resolve(results);
-					}
-				} else if (err) {
-					reject(err);
-				} else {
-					resolve(result);
-				}
-			});
-		} else {
-			args.push(function (result) {
-				if (opts.multiArgs) {
-					const results = new Array(arguments.length - 1);
-
-					for (let i = 0; i < arguments.length; i++) {
-						results[i] = arguments[i];
-					}
-
-					resolve(results);
-				} else {
-					resolve(result);
-				}
-			});
-		}
-
-		fn.apply(this, args);
-	});
-};
-
-module.exports = (obj, opts) => {
-	opts = Object.assign({
-		exclude: [/.+(Sync|Stream)$/],
-		errorFirst: true,
-		promiseModule: Promise
-	}, opts);
-
-	const filter = key => {
-		const match = pattern => typeof pattern === 'string' ? key === pattern : pattern.test(key);
-		return opts.include ? opts.include.some(match) : !opts.exclude.some(match);
-	};
-
-	let ret;
-	if (typeof obj === 'function') {
-		ret = function () {
-			if (opts.excludeMain) {
-				return obj.apply(this, arguments);
-			}
-
-			return processFn(obj, opts).apply(this, arguments);
-		};
-	} else {
-		ret = Object.create(Object.getPrototypeOf(obj));
-	}
-
-	for (const key in obj) { // eslint-disable-line guard-for-in
-		const x = obj[key];
-		ret[key] = typeof x === 'function' && filter(key) ? processFn(x, opts) : x;
-	}
-
-	return ret;
-};
-
-
-/***/ }),
-
-/***/ 8889:
-/***/ ((module) => {
-
-"use strict";
-
-// rfc7231 6.1
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var statusCodeCacheableByDefault = [200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501];
-
-// This implementation does not understand partial responses (206)
-var understoodStatuses = [200, 203, 204, 300, 301, 302, 303, 307, 308, 404, 405, 410, 414, 501];
-
-var hopByHopHeaders = { 'connection': true, 'keep-alive': true, 'proxy-authenticate': true, 'proxy-authorization': true, 'te': true, 'trailer': true, 'transfer-encoding': true, 'upgrade': true };
-var excludedFromRevalidationUpdate = {
-    // Since the old body is reused, it doesn't make sense to change properties of the body
-    'content-length': true, 'content-encoding': true, 'transfer-encoding': true,
-    'content-range': true
-};
-
-function parseCacheControl(header) {
-    var cc = {};
-    if (!header) return cc;
-
-    // TODO: When there is more than one value present for a given directive (e.g., two Expires header fields, multiple Cache-Control: max-age directives),
-    // the directive's value is considered invalid. Caches are encouraged to consider responses that have invalid freshness information to be stale
-    var parts = header.trim().split(/\s*,\s*/); // TODO: lame parsing
-    for (var _iterator = parts, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-        var _ref;
-
-        if (_isArray) {
-            if (_i >= _iterator.length) break;
-            _ref = _iterator[_i++];
-        } else {
-            _i = _iterator.next();
-            if (_i.done) break;
-            _ref = _i.value;
-        }
-
-        var part = _ref;
-
-        var _part$split = part.split(/\s*=\s*/, 2),
-            k = _part$split[0],
-            v = _part$split[1];
-
-        cc[k] = v === undefined ? true : v.replace(/^"|"$/g, ''); // TODO: lame unquoting
-    }
-
-    return cc;
-}
-
-function formatCacheControl(cc) {
-    var parts = [];
-    for (var k in cc) {
-        var v = cc[k];
-        parts.push(v === true ? k : k + '=' + v);
-    }
-    if (!parts.length) {
-        return undefined;
-    }
-    return parts.join(', ');
-}
-
-module.exports = function () {
-    function CachePolicy(req, res) {
-        var _ref2 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
-            shared = _ref2.shared,
-            cacheHeuristic = _ref2.cacheHeuristic,
-            immutableMinTimeToLive = _ref2.immutableMinTimeToLive,
-            ignoreCargoCult = _ref2.ignoreCargoCult,
-            _fromObject = _ref2._fromObject;
-
-        _classCallCheck(this, CachePolicy);
-
-        if (_fromObject) {
-            this._fromObject(_fromObject);
-            return;
-        }
-
-        if (!res || !res.headers) {
-            throw Error("Response headers missing");
-        }
-        this._assertRequestHasHeaders(req);
-
-        this._responseTime = this.now();
-        this._isShared = shared !== false;
-        this._cacheHeuristic = undefined !== cacheHeuristic ? cacheHeuristic : 0.1; // 10% matches IE
-        this._immutableMinTtl = undefined !== immutableMinTimeToLive ? immutableMinTimeToLive : 24 * 3600 * 1000;
-
-        this._status = 'status' in res ? res.status : 200;
-        this._resHeaders = res.headers;
-        this._rescc = parseCacheControl(res.headers['cache-control']);
-        this._method = 'method' in req ? req.method : 'GET';
-        this._url = req.url;
-        this._host = req.headers.host;
-        this._noAuthorization = !req.headers.authorization;
-        this._reqHeaders = res.headers.vary ? req.headers : null; // Don't keep all request headers if they won't be used
-        this._reqcc = parseCacheControl(req.headers['cache-control']);
-
-        // Assume that if someone uses legacy, non-standard uncecessary options they don't understand caching,
-        // so there's no point stricly adhering to the blindly copy&pasted directives.
-        if (ignoreCargoCult && "pre-check" in this._rescc && "post-check" in this._rescc) {
-            delete this._rescc['pre-check'];
-            delete this._rescc['post-check'];
-            delete this._rescc['no-cache'];
-            delete this._rescc['no-store'];
-            delete this._rescc['must-revalidate'];
-            this._resHeaders = Object.assign({}, this._resHeaders, { 'cache-control': formatCacheControl(this._rescc) });
-            delete this._resHeaders.expires;
-            delete this._resHeaders.pragma;
-        }
-
-        // When the Cache-Control header field is not present in a request, caches MUST consider the no-cache request pragma-directive
-        // as having the same effect as if "Cache-Control: no-cache" were present (see Section 5.2.1).
-        if (!res.headers['cache-control'] && /no-cache/.test(res.headers.pragma)) {
-            this._rescc['no-cache'] = true;
-        }
-    }
-
-    CachePolicy.prototype.now = function now() {
-        return Date.now();
-    };
-
-    CachePolicy.prototype.storable = function storable() {
-        // The "no-store" request directive indicates that a cache MUST NOT store any part of either this request or any response to it.
-        return !!(!this._reqcc['no-store'] && (
-        // A cache MUST NOT store a response to any request, unless:
-        // The request method is understood by the cache and defined as being cacheable, and
-        'GET' === this._method || 'HEAD' === this._method || 'POST' === this._method && this._hasExplicitExpiration()) &&
-        // the response status code is understood by the cache, and
-        understoodStatuses.indexOf(this._status) !== -1 &&
-        // the "no-store" cache directive does not appear in request or response header fields, and
-        !this._rescc['no-store'] && (
-        // the "private" response directive does not appear in the response, if the cache is shared, and
-        !this._isShared || !this._rescc.private) && (
-        // the Authorization header field does not appear in the request, if the cache is shared,
-        !this._isShared || this._noAuthorization || this._allowsStoringAuthenticated()) && (
-        // the response either:
-
-        // contains an Expires header field, or
-        this._resHeaders.expires ||
-        // contains a max-age response directive, or
-        // contains a s-maxage response directive and the cache is shared, or
-        // contains a public response directive.
-        this._rescc.public || this._rescc['max-age'] || this._rescc['s-maxage'] ||
-        // has a status code that is defined as cacheable by default
-        statusCodeCacheableByDefault.indexOf(this._status) !== -1));
-    };
-
-    CachePolicy.prototype._hasExplicitExpiration = function _hasExplicitExpiration() {
-        // 4.2.1 Calculating Freshness Lifetime
-        return this._isShared && this._rescc['s-maxage'] || this._rescc['max-age'] || this._resHeaders.expires;
-    };
-
-    CachePolicy.prototype._assertRequestHasHeaders = function _assertRequestHasHeaders(req) {
-        if (!req || !req.headers) {
-            throw Error("Request headers missing");
-        }
-    };
-
-    CachePolicy.prototype.satisfiesWithoutRevalidation = function satisfiesWithoutRevalidation(req) {
-        this._assertRequestHasHeaders(req);
-
-        // When presented with a request, a cache MUST NOT reuse a stored response, unless:
-        // the presented request does not contain the no-cache pragma (Section 5.4), nor the no-cache cache directive,
-        // unless the stored response is successfully validated (Section 4.3), and
-        var requestCC = parseCacheControl(req.headers['cache-control']);
-        if (requestCC['no-cache'] || /no-cache/.test(req.headers.pragma)) {
-            return false;
-        }
-
-        if (requestCC['max-age'] && this.age() > requestCC['max-age']) {
-            return false;
-        }
-
-        if (requestCC['min-fresh'] && this.timeToLive() < 1000 * requestCC['min-fresh']) {
-            return false;
-        }
-
-        // the stored response is either:
-        // fresh, or allowed to be served stale
-        if (this.stale()) {
-            var allowsStale = requestCC['max-stale'] && !this._rescc['must-revalidate'] && (true === requestCC['max-stale'] || requestCC['max-stale'] > this.age() - this.maxAge());
-            if (!allowsStale) {
-                return false;
-            }
-        }
-
-        return this._requestMatches(req, false);
-    };
-
-    CachePolicy.prototype._requestMatches = function _requestMatches(req, allowHeadMethod) {
-        // The presented effective request URI and that of the stored response match, and
-        return (!this._url || this._url === req.url) && this._host === req.headers.host && (
-        // the request method associated with the stored response allows it to be used for the presented request, and
-        !req.method || this._method === req.method || allowHeadMethod && 'HEAD' === req.method) &&
-        // selecting header fields nominated by the stored response (if any) match those presented, and
-        this._varyMatches(req);
-    };
-
-    CachePolicy.prototype._allowsStoringAuthenticated = function _allowsStoringAuthenticated() {
-        //  following Cache-Control response directives (Section 5.2.2) have such an effect: must-revalidate, public, and s-maxage.
-        return this._rescc['must-revalidate'] || this._rescc.public || this._rescc['s-maxage'];
-    };
-
-    CachePolicy.prototype._varyMatches = function _varyMatches(req) {
-        if (!this._resHeaders.vary) {
-            return true;
-        }
-
-        // A Vary header field-value of "*" always fails to match
-        if (this._resHeaders.vary === '*') {
-            return false;
-        }
-
-        var fields = this._resHeaders.vary.trim().toLowerCase().split(/\s*,\s*/);
-        for (var _iterator2 = fields, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
-            var _ref3;
-
-            if (_isArray2) {
-                if (_i2 >= _iterator2.length) break;
-                _ref3 = _iterator2[_i2++];
-            } else {
-                _i2 = _iterator2.next();
-                if (_i2.done) break;
-                _ref3 = _i2.value;
-            }
-
-            var name = _ref3;
-
-            if (req.headers[name] !== this._reqHeaders[name]) return false;
-        }
-        return true;
-    };
-
-    CachePolicy.prototype._copyWithoutHopByHopHeaders = function _copyWithoutHopByHopHeaders(inHeaders) {
-        var headers = {};
-        for (var name in inHeaders) {
-            if (hopByHopHeaders[name]) continue;
-            headers[name] = inHeaders[name];
-        }
-        // 9.1.  Connection
-        if (inHeaders.connection) {
-            var tokens = inHeaders.connection.trim().split(/\s*,\s*/);
-            for (var _iterator3 = tokens, _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _iterator3[Symbol.iterator]();;) {
-                var _ref4;
-
-                if (_isArray3) {
-                    if (_i3 >= _iterator3.length) break;
-                    _ref4 = _iterator3[_i3++];
-                } else {
-                    _i3 = _iterator3.next();
-                    if (_i3.done) break;
-                    _ref4 = _i3.value;
-                }
-
-                var _name = _ref4;
-
-                delete headers[_name];
-            }
-        }
-        if (headers.warning) {
-            var warnings = headers.warning.split(/,/).filter(function (warning) {
-                return !/^\s*1[0-9][0-9]/.test(warning);
-            });
-            if (!warnings.length) {
-                delete headers.warning;
-            } else {
-                headers.warning = warnings.join(',').trim();
-            }
-        }
-        return headers;
-    };
-
-    CachePolicy.prototype.responseHeaders = function responseHeaders() {
-        var headers = this._copyWithoutHopByHopHeaders(this._resHeaders);
-        var age = this.age();
-
-        // A cache SHOULD generate 113 warning if it heuristically chose a freshness
-        // lifetime greater than 24 hours and the response's age is greater than 24 hours.
-        if (age > 3600 * 24 && !this._hasExplicitExpiration() && this.maxAge() > 3600 * 24) {
-            headers.warning = (headers.warning ? `${headers.warning}, ` : '') + '113 - "rfc7234 5.5.4"';
-        }
-        headers.age = `${Math.round(age)}`;
-        return headers;
-    };
-
-    /**
-     * Value of the Date response header or current time if Date was demed invalid
-     * @return timestamp
-     */
-
-
-    CachePolicy.prototype.date = function date() {
-        var dateValue = Date.parse(this._resHeaders.date);
-        var maxClockDrift = 8 * 3600 * 1000;
-        if (Number.isNaN(dateValue) || dateValue < this._responseTime - maxClockDrift || dateValue > this._responseTime + maxClockDrift) {
-            return this._responseTime;
-        }
-        return dateValue;
-    };
-
-    /**
-     * Value of the Age header, in seconds, updated for the current time.
-     * May be fractional.
-     *
-     * @return Number
-     */
-
-
-    CachePolicy.prototype.age = function age() {
-        var age = Math.max(0, (this._responseTime - this.date()) / 1000);
-        if (this._resHeaders.age) {
-            var ageValue = this._ageValue();
-            if (ageValue > age) age = ageValue;
-        }
-
-        var residentTime = (this.now() - this._responseTime) / 1000;
-        return age + residentTime;
-    };
-
-    CachePolicy.prototype._ageValue = function _ageValue() {
-        var ageValue = parseInt(this._resHeaders.age);
-        return isFinite(ageValue) ? ageValue : 0;
-    };
-
-    /**
-     * Value of applicable max-age (or heuristic equivalent) in seconds. This counts since response's `Date`.
-     *
-     * For an up-to-date value, see `timeToLive()`.
-     *
-     * @return Number
-     */
-
-
-    CachePolicy.prototype.maxAge = function maxAge() {
-        if (!this.storable() || this._rescc['no-cache']) {
-            return 0;
-        }
-
-        // Shared responses with cookies are cacheable according to the RFC, but IMHO it'd be unwise to do so by default
-        // so this implementation requires explicit opt-in via public header
-        if (this._isShared && this._resHeaders['set-cookie'] && !this._rescc.public && !this._rescc.immutable) {
-            return 0;
-        }
-
-        if (this._resHeaders.vary === '*') {
-            return 0;
-        }
-
-        if (this._isShared) {
-            if (this._rescc['proxy-revalidate']) {
-                return 0;
-            }
-            // if a response includes the s-maxage directive, a shared cache recipient MUST ignore the Expires field.
-            if (this._rescc['s-maxage']) {
-                return parseInt(this._rescc['s-maxage'], 10);
-            }
-        }
-
-        // If a response includes a Cache-Control field with the max-age directive, a recipient MUST ignore the Expires field.
-        if (this._rescc['max-age']) {
-            return parseInt(this._rescc['max-age'], 10);
-        }
-
-        var defaultMinTtl = this._rescc.immutable ? this._immutableMinTtl : 0;
-
-        var dateValue = this.date();
-        if (this._resHeaders.expires) {
-            var expires = Date.parse(this._resHeaders.expires);
-            // A cache recipient MUST interpret invalid date formats, especially the value "0", as representing a time in the past (i.e., "already expired").
-            if (Number.isNaN(expires) || expires < dateValue) {
-                return 0;
-            }
-            return Math.max(defaultMinTtl, (expires - dateValue) / 1000);
-        }
-
-        if (this._resHeaders['last-modified']) {
-            var lastModified = Date.parse(this._resHeaders['last-modified']);
-            if (isFinite(lastModified) && dateValue > lastModified) {
-                return Math.max(defaultMinTtl, (dateValue - lastModified) / 1000 * this._cacheHeuristic);
-            }
-        }
-
-        return defaultMinTtl;
-    };
-
-    CachePolicy.prototype.timeToLive = function timeToLive() {
-        return Math.max(0, this.maxAge() - this.age()) * 1000;
-    };
-
-    CachePolicy.prototype.stale = function stale() {
-        return this.maxAge() <= this.age();
-    };
-
-    CachePolicy.fromObject = function fromObject(obj) {
-        return new this(undefined, undefined, { _fromObject: obj });
-    };
-
-    CachePolicy.prototype._fromObject = function _fromObject(obj) {
-        if (this._responseTime) throw Error("Reinitialized");
-        if (!obj || obj.v !== 1) throw Error("Invalid serialization");
-
-        this._responseTime = obj.t;
-        this._isShared = obj.sh;
-        this._cacheHeuristic = obj.ch;
-        this._immutableMinTtl = obj.imm !== undefined ? obj.imm : 24 * 3600 * 1000;
-        this._status = obj.st;
-        this._resHeaders = obj.resh;
-        this._rescc = obj.rescc;
-        this._method = obj.m;
-        this._url = obj.u;
-        this._host = obj.h;
-        this._noAuthorization = obj.a;
-        this._reqHeaders = obj.reqh;
-        this._reqcc = obj.reqcc;
-    };
-
-    CachePolicy.prototype.toObject = function toObject() {
-        return {
-            v: 1,
-            t: this._responseTime,
-            sh: this._isShared,
-            ch: this._cacheHeuristic,
-            imm: this._immutableMinTtl,
-            st: this._status,
-            resh: this._resHeaders,
-            rescc: this._rescc,
-            m: this._method,
-            u: this._url,
-            h: this._host,
-            a: this._noAuthorization,
-            reqh: this._reqHeaders,
-            reqcc: this._reqcc
-        };
-    };
-
-    /**
-     * Headers for sending to the origin server to revalidate stale response.
-     * Allows server to return 304 to allow reuse of the previous response.
-     *
-     * Hop by hop headers are always stripped.
-     * Revalidation headers may be added or removed, depending on request.
-     */
-
-
-    CachePolicy.prototype.revalidationHeaders = function revalidationHeaders(incomingReq) {
-        this._assertRequestHasHeaders(incomingReq);
-        var headers = this._copyWithoutHopByHopHeaders(incomingReq.headers);
-
-        // This implementation does not understand range requests
-        delete headers['if-range'];
-
-        if (!this._requestMatches(incomingReq, true) || !this.storable()) {
-            // revalidation allowed via HEAD
-            // not for the same resource, or wasn't allowed to be cached anyway
-            delete headers['if-none-match'];
-            delete headers['if-modified-since'];
-            return headers;
-        }
-
-        /* MUST send that entity-tag in any cache validation request (using If-Match or If-None-Match) if an entity-tag has been provided by the origin server. */
-        if (this._resHeaders.etag) {
-            headers['if-none-match'] = headers['if-none-match'] ? `${headers['if-none-match']}, ${this._resHeaders.etag}` : this._resHeaders.etag;
-        }
-
-        // Clients MAY issue simple (non-subrange) GET requests with either weak validators or strong validators. Clients MUST NOT use weak validators in other forms of request.
-        var forbidsWeakValidators = headers['accept-ranges'] || headers['if-match'] || headers['if-unmodified-since'] || this._method && this._method != 'GET';
-
-        /* SHOULD send the Last-Modified value in non-subrange cache validation requests (using If-Modified-Since) if only a Last-Modified value has been provided by the origin server.
-        Note: This implementation does not understand partial responses (206) */
-        if (forbidsWeakValidators) {
-            delete headers['if-modified-since'];
-
-            if (headers['if-none-match']) {
-                var etags = headers['if-none-match'].split(/,/).filter(function (etag) {
-                    return !/^\s*W\//.test(etag);
-                });
-                if (!etags.length) {
-                    delete headers['if-none-match'];
-                } else {
-                    headers['if-none-match'] = etags.join(',').trim();
-                }
-            }
-        } else if (this._resHeaders['last-modified'] && !headers['if-modified-since']) {
-            headers['if-modified-since'] = this._resHeaders['last-modified'];
-        }
-
-        return headers;
-    };
-
-    /**
-     * Creates new CachePolicy with information combined from the previews response,
-     * and the new revalidation response.
-     *
-     * Returns {policy, modified} where modified is a boolean indicating
-     * whether the response body has been modified, and old cached body can't be used.
-     *
-     * @return {Object} {policy: CachePolicy, modified: Boolean}
-     */
-
-
-    CachePolicy.prototype.revalidatedPolicy = function revalidatedPolicy(request, response) {
-        this._assertRequestHasHeaders(request);
-        if (!response || !response.headers) {
-            throw Error("Response headers missing");
-        }
-
-        // These aren't going to be supported exactly, since one CachePolicy object
-        // doesn't know about all the other cached objects.
-        var matches = false;
-        if (response.status !== undefined && response.status != 304) {
-            matches = false;
-        } else if (response.headers.etag && !/^\s*W\//.test(response.headers.etag)) {
-            // "All of the stored responses with the same strong validator are selected.
-            // If none of the stored responses contain the same strong validator,
-            // then the cache MUST NOT use the new response to update any stored responses."
-            matches = this._resHeaders.etag && this._resHeaders.etag.replace(/^\s*W\//, '') === response.headers.etag;
-        } else if (this._resHeaders.etag && response.headers.etag) {
-            // "If the new response contains a weak validator and that validator corresponds
-            // to one of the cache's stored responses,
-            // then the most recent of those matching stored responses is selected for update."
-            matches = this._resHeaders.etag.replace(/^\s*W\//, '') === response.headers.etag.replace(/^\s*W\//, '');
-        } else if (this._resHeaders['last-modified']) {
-            matches = this._resHeaders['last-modified'] === response.headers['last-modified'];
-        } else {
-            // If the new response does not include any form of validator (such as in the case where
-            // a client generates an If-Modified-Since request from a source other than the Last-Modified
-            // response header field), and there is only one stored response, and that stored response also
-            // lacks a validator, then that stored response is selected for update.
-            if (!this._resHeaders.etag && !this._resHeaders['last-modified'] && !response.headers.etag && !response.headers['last-modified']) {
-                matches = true;
-            }
-        }
-
-        if (!matches) {
-            return {
-                policy: new this.constructor(request, response),
-                modified: true
-            };
-        }
-
-        // use other header fields provided in the 304 (Not Modified) response to replace all instances
-        // of the corresponding header fields in the stored response.
-        var headers = {};
-        for (var k in this._resHeaders) {
-            headers[k] = k in response.headers && !excludedFromRevalidationUpdate[k] ? response.headers[k] : this._resHeaders[k];
-        }
-
-        var newResponse = Object.assign({}, response, {
-            status: this._status,
-            method: this._method,
-            headers
-        });
-        return {
-            policy: new this.constructor(request, newResponse),
-            modified: false
-        };
-    };
-
-    return CachePolicy;
-}();
-
-/***/ }),
-
-/***/ 4876:
-/***/ ((__unused_webpack_module, exports) => {
-
-//TODO: handle reviver/dehydrate function like normal
-//and handle indentation, like normal.
-//if anyone needs this... please send pull request.
-
-exports.stringify = function stringify (o) {
-  if('undefined' == typeof o) return o
-
-  if(o && Buffer.isBuffer(o))
-    return JSON.stringify(':base64:' + o.toString('base64'))
-
-  if(o && o.toJSON)
-    o =  o.toJSON()
-
-  if(o && 'object' === typeof o) {
-    var s = ''
-    var array = Array.isArray(o)
-    s = array ? '[' : '{'
-    var first = true
-
-    for(var k in o) {
-      var ignore = 'function' == typeof o[k] || (!array && 'undefined' === typeof o[k])
-      if(Object.hasOwnProperty.call(o, k) && !ignore) {
-        if(!first)
-          s += ','
-        first = false
-        if (array) {
-          if(o[k] == undefined)
-            s += 'null'
-          else
-            s += stringify(o[k])
-        } else if (o[k] !== void(0)) {
-          s += stringify(k) + ':' + stringify(o[k])
-        }
-      }
-    }
-
-    s += array ? ']' : '}'
-
-    return s
-  } else if ('string' === typeof o) {
-    return JSON.stringify(/^:/.test(o) ? ':' + o : o)
-  } else if ('undefined' === typeof o) {
-    return 'null';
-  } else
-    return JSON.stringify(o)
-}
-
-exports.parse = function (s) {
-  return JSON.parse(s, function (key, value) {
-    if('string' === typeof value) {
-      if(/^:base64:/.test(value))
-        return new Buffer(value.substring(8), 'base64')
-      else
-        return /^:/.test(value) ? value.substring(1) : value 
-    }
-    return value
-  })
-}
-
-
-/***/ }),
-
-/***/ 5608:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-const EventEmitter = __nccwpck_require__(2361);
-const JSONB = __nccwpck_require__(4876);
-
-const loadStore = opts => {
-	const adapters = {
-		redis: '@keyv/redis',
-		mongodb: '@keyv/mongo',
-		mongo: '@keyv/mongo',
-		sqlite: '@keyv/sqlite',
-		postgresql: '@keyv/postgres',
-		postgres: '@keyv/postgres',
-		mysql: '@keyv/mysql'
-	};
-	if (opts.adapter || opts.uri) {
-		const adapter = opts.adapter || /^[^:]*/.exec(opts.uri)[0];
-		return new (require(adapters[adapter]))(opts);
-	}
-	return new Map();
-};
-
-class Keyv extends EventEmitter {
-	constructor(uri, opts) {
-		super();
-		this.opts = Object.assign(
-			{ namespace: 'keyv' },
-			(typeof uri === 'string') ? { uri } : uri,
-			opts
-		);
-
-		if (!this.opts.store) {
-			const adapterOpts = Object.assign({}, this.opts);
-			this.opts.store = loadStore(adapterOpts);
-		}
-
-		if (typeof this.opts.store.on === 'function') {
-			this.opts.store.on('error', err => this.emit('error', err));
-		}
-
-		this.opts.store.namespace = this.opts.namespace;
-	}
-
-	_getKeyPrefix(key) {
-		return `${this.opts.namespace}:${key}`;
-	}
-
-	get(key) {
-		key = this._getKeyPrefix(key);
-		const store = this.opts.store;
-		return Promise.resolve()
-			.then(() => store.get(key))
-			.then(data => {
-				data = (typeof data === 'string') ? JSONB.parse(data) : data;
-				if (data === undefined) {
-					return undefined;
-				}
-				if (typeof data.expires === 'number' && Date.now() > data.expires) {
-					this.delete(key);
-					return undefined;
-				}
-				return data.value;
-			});
-	}
-
-	set(key, value, ttl) {
-		key = this._getKeyPrefix(key);
-		if (typeof ttl === 'undefined') {
-			ttl = this.opts.ttl;
-		}
-		if (ttl === 0) {
-			ttl = undefined;
-		}
-		const store = this.opts.store;
-
-		return Promise.resolve()
-			.then(() => {
-				const expires = (typeof ttl === 'number') ? (Date.now() + ttl) : null;
-				value = { value, expires };
-				return store.set(key, JSONB.stringify(value), ttl);
-			})
-			.then(() => true);
-	}
-
-	delete(key) {
-		key = this._getKeyPrefix(key);
-		const store = this.opts.store;
-		return Promise.resolve()
-			.then(() => store.delete(key));
-	}
-
-	clear() {
-		const store = this.opts.store;
-		return Promise.resolve()
-			.then(() => store.clear());
-	}
-}
-
-module.exports = Keyv;
-
-
-/***/ }),
-
-/***/ 5649:
-/***/ ((module) => {
-
-"use strict";
-
-module.exports = function (obj) {
-	var ret = {};
-	var keys = Object.keys(Object(obj));
-
-	for (var i = 0; i < keys.length; i++) {
-		ret[keys[i].toLowerCase()] = obj[keys[i]];
-	}
-
-	return ret;
-};
-
-
-/***/ }),
-
-/***/ 2306:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-const url = __nccwpck_require__(7310);
-const punycode = __nccwpck_require__(5477);
-const queryString = __nccwpck_require__(293);
-const prependHttp = __nccwpck_require__(6143);
-const sortKeys = __nccwpck_require__(3925);
-
-const DEFAULT_PORTS = {
-	'http:': 80,
-	'https:': 443,
-	'ftp:': 21
-};
-
-// Protocols that always contain a `//`` bit
-const slashedProtocol = {
-	http: true,
-	https: true,
-	ftp: true,
-	gopher: true,
-	file: true,
-	'http:': true,
-	'https:': true,
-	'ftp:': true,
-	'gopher:': true,
-	'file:': true
-};
-
-function testParameter(name, filters) {
-	return filters.some(filter => filter instanceof RegExp ? filter.test(name) : filter === name);
-}
-
-module.exports = (str, opts) => {
-	opts = Object.assign({
-		normalizeProtocol: true,
-		normalizeHttps: false,
-		stripFragment: true,
-		stripWWW: true,
-		removeQueryParameters: [/^utm_\w+/i],
-		removeTrailingSlash: true,
-		removeDirectoryIndex: false,
-		sortQueryParameters: true
-	}, opts);
-
-	if (typeof str !== 'string') {
-		throw new TypeError('Expected a string');
-	}
-
-	const hasRelativeProtocol = str.startsWith('//');
-
-	// Prepend protocol
-	str = prependHttp(str.trim()).replace(/^\/\//, 'http://');
-
-	const urlObj = url.parse(str);
-
-	if (opts.normalizeHttps && urlObj.protocol === 'https:') {
-		urlObj.protocol = 'http:';
-	}
-
-	if (!urlObj.hostname && !urlObj.pathname) {
-		throw new Error('Invalid URL');
-	}
-
-	// Prevent these from being used by `url.format`
-	delete urlObj.host;
-	delete urlObj.query;
-
-	// Remove fragment
-	if (opts.stripFragment) {
-		delete urlObj.hash;
-	}
-
-	// Remove default port
-	const port = DEFAULT_PORTS[urlObj.protocol];
-	if (Number(urlObj.port) === port) {
-		delete urlObj.port;
-	}
-
-	// Remove duplicate slashes
-	if (urlObj.pathname) {
-		urlObj.pathname = urlObj.pathname.replace(/\/{2,}/g, '/');
-	}
-
-	// Decode URI octets
-	if (urlObj.pathname) {
-		urlObj.pathname = decodeURI(urlObj.pathname);
-	}
-
-	// Remove directory index
-	if (opts.removeDirectoryIndex === true) {
-		opts.removeDirectoryIndex = [/^index\.[a-z]+$/];
-	}
-
-	if (Array.isArray(opts.removeDirectoryIndex) && opts.removeDirectoryIndex.length > 0) {
-		let pathComponents = urlObj.pathname.split('/');
-		const lastComponent = pathComponents[pathComponents.length - 1];
-
-		if (testParameter(lastComponent, opts.removeDirectoryIndex)) {
-			pathComponents = pathComponents.slice(0, pathComponents.length - 1);
-			urlObj.pathname = pathComponents.slice(1).join('/') + '/';
-		}
-	}
-
-	// Resolve relative paths, but only for slashed protocols
-	if (slashedProtocol[urlObj.protocol]) {
-		const domain = urlObj.protocol + '//' + urlObj.hostname;
-		const relative = url.resolve(domain, urlObj.pathname);
-		urlObj.pathname = relative.replace(domain, '');
-	}
-
-	if (urlObj.hostname) {
-		// IDN to Unicode
-		urlObj.hostname = punycode.toUnicode(urlObj.hostname).toLowerCase();
-
-		// Remove trailing dot
-		urlObj.hostname = urlObj.hostname.replace(/\.$/, '');
-
-		// Remove `www.`
-		if (opts.stripWWW) {
-			urlObj.hostname = urlObj.hostname.replace(/^www\./, '');
-		}
-	}
-
-	// Remove URL with empty query string
-	if (urlObj.search === '?') {
-		delete urlObj.search;
-	}
-
-	const queryParameters = queryString.parse(urlObj.search);
-
-	// Remove query unwanted parameters
-	if (Array.isArray(opts.removeQueryParameters)) {
-		for (const key in queryParameters) {
-			if (testParameter(key, opts.removeQueryParameters)) {
-				delete queryParameters[key];
-			}
-		}
-	}
-
-	// Sort query parameters
-	if (opts.sortQueryParameters) {
-		urlObj.search = queryString.stringify(sortKeys(queryParameters));
-	}
-
-	// Decode query parameters
-	if (urlObj.search !== null) {
-		urlObj.search = decodeURIComponent(urlObj.search);
-	}
-
-	// Take advantage of many of the Node `url` normalizations
-	str = url.format(urlObj);
-
-	// Remove ending `/`
-	if (opts.removeTrailingSlash || urlObj.pathname === '/') {
-		str = str.replace(/\/$/, '');
-	}
-
-	// Restore relative protocol, if applicable
-	if (hasRelativeProtocol && !opts.normalizeProtocol) {
-		str = str.replace(/^http:\/\//, '//');
-	}
-
-	return str;
-};
-
-
-/***/ }),
-
-/***/ 9211:
-/***/ ((module) => {
-
-"use strict";
-
-
-class CancelError extends Error {
-	constructor() {
-		super('Promise was canceled');
-		this.name = 'CancelError';
-	}
-
-	get isCanceled() {
-		return true;
-	}
-}
-
-class PCancelable {
-	static fn(userFn) {
-		return function () {
-			const args = [].slice.apply(arguments);
-			return new PCancelable((resolve, reject, onCancel) => {
-				args.push(onCancel);
-				userFn.apply(null, args).then(resolve, reject);
-			});
-		};
-	}
-
-	constructor(executor) {
-		this._cancelHandlers = [];
-		this._isPending = true;
-		this._isCanceled = false;
-
-		this._promise = new Promise((resolve, reject) => {
-			this._reject = reject;
-
-			return executor(
-				value => {
-					this._isPending = false;
-					resolve(value);
-				},
-				error => {
-					this._isPending = false;
-					reject(error);
-				},
-				handler => {
-					this._cancelHandlers.push(handler);
-				}
-			);
-		});
-	}
-
-	then(onFulfilled, onRejected) {
-		return this._promise.then(onFulfilled, onRejected);
-	}
-
-	catch(onRejected) {
-		return this._promise.catch(onRejected);
-	}
-
-	finally(onFinally) {
-		return this._promise.finally(onFinally);
-	}
-
-	cancel() {
-		if (!this._isPending || this._isCanceled) {
-			return;
-		}
-
-		if (this._cancelHandlers.length > 0) {
-			try {
-				for (const handler of this._cancelHandlers) {
-					handler();
-				}
-			} catch (err) {
-				this._reject(err);
-			}
-		}
-
-		this._isCanceled = true;
-		this._reject(new CancelError());
-	}
-
-	get isCanceled() {
-		return this._isCanceled;
-	}
-}
-
-Object.setPrototypeOf(PCancelable.prototype, Promise.prototype);
-
-module.exports = PCancelable;
-module.exports.CancelError = CancelError;
-
-
-/***/ }),
-
 /***/ 3097:
 /***/ ((module) => {
 
@@ -10642,111 +8507,6 @@ module.exports = (input, options) => {
 	}
 
 	return ret;
-};
-
-
-/***/ }),
-
-/***/ 1229:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-
-const Readable = (__nccwpck_require__(2781).Readable);
-const lowercaseKeys = __nccwpck_require__(5649);
-
-class Response extends Readable {
-	constructor(statusCode, headers, body, url) {
-		if (typeof statusCode !== 'number') {
-			throw new TypeError('Argument `statusCode` should be a number');
-		}
-		if (typeof headers !== 'object') {
-			throw new TypeError('Argument `headers` should be an object');
-		}
-		if (!(body instanceof Buffer)) {
-			throw new TypeError('Argument `body` should be a buffer');
-		}
-		if (typeof url !== 'string') {
-			throw new TypeError('Argument `url` should be a string');
-		}
-
-		super();
-		this.statusCode = statusCode;
-		this.headers = lowercaseKeys(headers);
-		this.body = body;
-		this.url = url;
-	}
-
-	_read() {
-		this.push(this.body);
-		this.push(null);
-	}
-}
-
-module.exports = Response;
-
-
-/***/ }),
-
-/***/ 3925:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-const isPlainObj = __nccwpck_require__(864);
-
-module.exports = (obj, opts) => {
-	if (!isPlainObj(obj)) {
-		throw new TypeError('Expected a plain object');
-	}
-
-	opts = opts || {};
-
-	// DEPRECATED
-	if (typeof opts === 'function') {
-		throw new TypeError('Specify the compare function as an option instead');
-	}
-
-	const deep = opts.deep;
-	const seenInput = [];
-	const seenOutput = [];
-
-	const sortKeys = x => {
-		const seenIndex = seenInput.indexOf(x);
-
-		if (seenIndex !== -1) {
-			return seenOutput[seenIndex];
-		}
-
-		const ret = {};
-		const keys = Object.keys(x).sort(opts.compare);
-
-		seenInput.push(x);
-		seenOutput.push(ret);
-
-		for (let i = 0; i < keys.length; i++) {
-			const key = keys[i];
-			const val = x[key];
-
-			if (deep && Array.isArray(val)) {
-				const retArr = [];
-
-				for (let j = 0; j < val.length; j++) {
-					retArr[j] = isPlainObj(val[j]) ? sortKeys(val[j]) : val[j];
-				}
-
-				ret[key] = retArr;
-				continue;
-			}
-
-			ret[key] = deep && isPlainObj(val) ? sortKeys(val) : val;
-		}
-
-		return ret;
-	};
-
-	return sortKeys(obj);
 };
 
 
@@ -12725,6 +10485,999 @@ module.exports = (__nccwpck_require__(7147).constants) || __nccwpck_require__(20
 
 /***/ }),
 
+/***/ 1585:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const PassThrough = (__nccwpck_require__(2781).PassThrough);
+
+module.exports = opts => {
+	opts = Object.assign({}, opts);
+
+	const array = opts.array;
+	let encoding = opts.encoding;
+	const buffer = encoding === 'buffer';
+	let objectMode = false;
+
+	if (array) {
+		objectMode = !(encoding || buffer);
+	} else {
+		encoding = encoding || 'utf8';
+	}
+
+	if (buffer) {
+		encoding = null;
+	}
+
+	let len = 0;
+	const ret = [];
+	const stream = new PassThrough({objectMode});
+
+	if (encoding) {
+		stream.setEncoding(encoding);
+	}
+
+	stream.on('data', chunk => {
+		ret.push(chunk);
+
+		if (objectMode) {
+			len = ret.length;
+		} else {
+			len += chunk.length;
+		}
+	});
+
+	stream.getBufferedValue = () => {
+		if (array) {
+			return ret;
+		}
+
+		return buffer ? Buffer.concat(ret, len) : ret.join('');
+	};
+
+	stream.getBufferedLength = () => len;
+
+	return stream;
+};
+
+
+/***/ }),
+
+/***/ 1766:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const bufferStream = __nccwpck_require__(1585);
+
+function getStream(inputStream, opts) {
+	if (!inputStream) {
+		return Promise.reject(new Error('Expected a stream'));
+	}
+
+	opts = Object.assign({maxBuffer: Infinity}, opts);
+
+	const maxBuffer = opts.maxBuffer;
+	let stream;
+	let clean;
+
+	const p = new Promise((resolve, reject) => {
+		const error = err => {
+			if (err) { // null check
+				err.bufferedData = stream.getBufferedValue();
+			}
+
+			reject(err);
+		};
+
+		stream = bufferStream(opts);
+		inputStream.once('error', error);
+		inputStream.pipe(stream);
+
+		stream.on('data', () => {
+			if (stream.getBufferedLength() > maxBuffer) {
+				reject(new Error('maxBuffer exceeded'));
+			}
+		});
+		stream.once('error', error);
+		stream.on('end', resolve);
+
+		clean = () => {
+			// some streams doesn't implement the `stream.Readable` interface correctly
+			if (inputStream.unpipe) {
+				inputStream.unpipe(stream);
+			}
+		};
+	});
+
+	p.then(clean, clean);
+
+	return p.then(() => stream.getBufferedValue());
+}
+
+module.exports = getStream;
+module.exports.buffer = (stream, opts) => getStream(stream, Object.assign({}, opts, {encoding: 'buffer'}));
+module.exports.array = (stream, opts) => getStream(stream, Object.assign({}, opts, {array: true}));
+
+
+/***/ }),
+
+/***/ 7898:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const urlLib = __nccwpck_require__(7310);
+const http = __nccwpck_require__(3685);
+const PCancelable = __nccwpck_require__(9072);
+const is = __nccwpck_require__(7678);
+
+class GotError extends Error {
+	constructor(message, error, opts) {
+		super(message);
+		Error.captureStackTrace(this, this.constructor);
+		this.name = 'GotError';
+
+		if (!is.undefined(error.code)) {
+			this.code = error.code;
+		}
+
+		Object.assign(this, {
+			host: opts.host,
+			hostname: opts.hostname,
+			method: opts.method,
+			path: opts.path,
+			protocol: opts.protocol,
+			url: opts.href
+		});
+	}
+}
+
+module.exports.GotError = GotError;
+
+module.exports.CacheError = class extends GotError {
+	constructor(error, opts) {
+		super(error.message, error, opts);
+		this.name = 'CacheError';
+	}
+};
+
+module.exports.RequestError = class extends GotError {
+	constructor(error, opts) {
+		super(error.message, error, opts);
+		this.name = 'RequestError';
+	}
+};
+
+module.exports.ReadError = class extends GotError {
+	constructor(error, opts) {
+		super(error.message, error, opts);
+		this.name = 'ReadError';
+	}
+};
+
+module.exports.ParseError = class extends GotError {
+	constructor(error, statusCode, opts, data) {
+		super(`${error.message} in "${urlLib.format(opts)}": \n${data.slice(0, 77)}...`, error, opts);
+		this.name = 'ParseError';
+		this.statusCode = statusCode;
+		this.statusMessage = http.STATUS_CODES[this.statusCode];
+	}
+};
+
+module.exports.HTTPError = class extends GotError {
+	constructor(statusCode, statusMessage, headers, opts) {
+		if (statusMessage) {
+			statusMessage = statusMessage.replace(/\r?\n/g, ' ').trim();
+		} else {
+			statusMessage = http.STATUS_CODES[statusCode];
+		}
+		super(`Response code ${statusCode} (${statusMessage})`, {}, opts);
+		this.name = 'HTTPError';
+		this.statusCode = statusCode;
+		this.statusMessage = statusMessage;
+		this.headers = headers;
+	}
+};
+
+module.exports.MaxRedirectsError = class extends GotError {
+	constructor(statusCode, redirectUrls, opts) {
+		super('Redirected 10 times. Aborting.', {}, opts);
+		this.name = 'MaxRedirectsError';
+		this.statusCode = statusCode;
+		this.statusMessage = http.STATUS_CODES[this.statusCode];
+		this.redirectUrls = redirectUrls;
+	}
+};
+
+module.exports.UnsupportedProtocolError = class extends GotError {
+	constructor(opts) {
+		super(`Unsupported protocol "${opts.protocol}"`, {}, opts);
+		this.name = 'UnsupportedProtocolError';
+	}
+};
+
+module.exports.CancelError = PCancelable.CancelError;
+
+
+/***/ }),
+
+/***/ 3798:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const EventEmitter = __nccwpck_require__(2361);
+const http = __nccwpck_require__(3685);
+const https = __nccwpck_require__(5687);
+const PassThrough = (__nccwpck_require__(2781).PassThrough);
+const Transform = (__nccwpck_require__(2781).Transform);
+const urlLib = __nccwpck_require__(7310);
+const fs = __nccwpck_require__(7147);
+const querystring = __nccwpck_require__(3477);
+const CacheableRequest = __nccwpck_require__(8116);
+const duplexer3 = __nccwpck_require__(7994);
+const intoStream = __nccwpck_require__(5025);
+const is = __nccwpck_require__(7678);
+const getStream = __nccwpck_require__(1766);
+const timedOut = __nccwpck_require__(9478);
+const urlParseLax = __nccwpck_require__(3194);
+const urlToOptions = __nccwpck_require__(4559);
+const lowercaseKeys = __nccwpck_require__(9662);
+const decompressResponse = __nccwpck_require__(2391);
+const mimicResponse = __nccwpck_require__(2610);
+const isRetryAllowed = __nccwpck_require__(841);
+const isURL = __nccwpck_require__(7064);
+const PCancelable = __nccwpck_require__(9072);
+const pTimeout = __nccwpck_require__(6424);
+const pify = __nccwpck_require__(5386);
+const Buffer = (__nccwpck_require__(1867).Buffer);
+const pkg = __nccwpck_require__(4046);
+const errors = __nccwpck_require__(7898);
+
+const getMethodRedirectCodes = new Set([300, 301, 302, 303, 304, 305, 307, 308]);
+const allMethodRedirectCodes = new Set([300, 303, 307, 308]);
+
+const isFormData = body => is.nodeStream(body) && is.function(body.getBoundary);
+
+const getBodySize = opts => {
+	const body = opts.body;
+
+	if (opts.headers['content-length']) {
+		return Number(opts.headers['content-length']);
+	}
+
+	if (!body && !opts.stream) {
+		return 0;
+	}
+
+	if (is.string(body)) {
+		return Buffer.byteLength(body);
+	}
+
+	if (isFormData(body)) {
+		return pify(body.getLength.bind(body))();
+	}
+
+	if (body instanceof fs.ReadStream) {
+		return pify(fs.stat)(body.path).then(stat => stat.size);
+	}
+
+	if (is.nodeStream(body) && is.buffer(body._buffer)) {
+		return body._buffer.length;
+	}
+
+	return null;
+};
+
+function requestAsEventEmitter(opts) {
+	opts = opts || {};
+
+	const ee = new EventEmitter();
+	const requestUrl = opts.href || urlLib.resolve(urlLib.format(opts), opts.path);
+	const redirects = [];
+	const agents = is.object(opts.agent) ? opts.agent : null;
+	let retryCount = 0;
+	let redirectUrl;
+	let uploadBodySize;
+	let uploaded = 0;
+
+	const get = opts => {
+		if (opts.protocol !== 'http:' && opts.protocol !== 'https:') {
+			ee.emit('error', new got.UnsupportedProtocolError(opts));
+			return;
+		}
+
+		let fn = opts.protocol === 'https:' ? https : http;
+
+		if (agents) {
+			const protocolName = opts.protocol === 'https:' ? 'https' : 'http';
+			opts.agent = agents[protocolName] || opts.agent;
+		}
+
+		if (opts.useElectronNet && process.versions.electron) {
+			const electron = __nccwpck_require__(8299);
+			fn = electron.net || electron.remote.net;
+		}
+
+		let progressInterval;
+
+		const cacheableRequest = new CacheableRequest(fn.request, opts.cache);
+		const cacheReq = cacheableRequest(opts, res => {
+			clearInterval(progressInterval);
+
+			ee.emit('uploadProgress', {
+				percent: 1,
+				transferred: uploaded,
+				total: uploadBodySize
+			});
+
+			const statusCode = res.statusCode;
+
+			res.url = redirectUrl || requestUrl;
+			res.requestUrl = requestUrl;
+
+			const followRedirect = opts.followRedirect && 'location' in res.headers;
+			const redirectGet = followRedirect && getMethodRedirectCodes.has(statusCode);
+			const redirectAll = followRedirect && allMethodRedirectCodes.has(statusCode);
+
+			if (redirectAll || (redirectGet && (opts.method === 'GET' || opts.method === 'HEAD'))) {
+				res.resume();
+
+				if (statusCode === 303) {
+					// Server responded with "see other", indicating that the resource exists at another location,
+					// and the client should request it from that location via GET or HEAD.
+					opts.method = 'GET';
+				}
+
+				if (redirects.length >= 10) {
+					ee.emit('error', new got.MaxRedirectsError(statusCode, redirects, opts), null, res);
+					return;
+				}
+
+				const bufferString = Buffer.from(res.headers.location, 'binary').toString();
+
+				redirectUrl = urlLib.resolve(urlLib.format(opts), bufferString);
+
+				redirects.push(redirectUrl);
+
+				const redirectOpts = Object.assign({}, opts, urlLib.parse(redirectUrl));
+
+				ee.emit('redirect', res, redirectOpts);
+
+				get(redirectOpts);
+
+				return;
+			}
+
+			setImmediate(() => {
+				try {
+					getResponse(res, opts, ee, redirects);
+				} catch (e) {
+					ee.emit('error', e);
+				}
+			});
+		});
+
+		cacheReq.on('error', err => {
+			if (err instanceof CacheableRequest.RequestError) {
+				ee.emit('error', new got.RequestError(err, opts));
+			} else {
+				ee.emit('error', new got.CacheError(err, opts));
+			}
+		});
+
+		cacheReq.once('request', req => {
+			let aborted = false;
+			req.once('abort', _ => {
+				aborted = true;
+			});
+
+			req.once('error', err => {
+				clearInterval(progressInterval);
+
+				if (aborted) {
+					return;
+				}
+
+				const backoff = opts.retries(++retryCount, err);
+
+				if (backoff) {
+					setTimeout(get, backoff, opts);
+					return;
+				}
+
+				ee.emit('error', new got.RequestError(err, opts));
+			});
+
+			ee.once('request', req => {
+				ee.emit('uploadProgress', {
+					percent: 0,
+					transferred: 0,
+					total: uploadBodySize
+				});
+
+				const socket = req.connection;
+				if (socket) {
+					// `._connecting` was the old property which was made public in node v6.1.0
+					const isConnecting = socket.connecting === undefined ? socket._connecting : socket.connecting;
+
+					const onSocketConnect = () => {
+						const uploadEventFrequency = 150;
+
+						progressInterval = setInterval(() => {
+							if (socket.destroyed) {
+								clearInterval(progressInterval);
+								return;
+							}
+
+							const lastUploaded = uploaded;
+							const headersSize = req._header ? Buffer.byteLength(req._header) : 0;
+							uploaded = socket.bytesWritten - headersSize;
+
+							// Prevent the known issue of `bytesWritten` being larger than body size
+							if (uploadBodySize && uploaded > uploadBodySize) {
+								uploaded = uploadBodySize;
+							}
+
+							// Don't emit events with unchanged progress and
+							// prevent last event from being emitted, because
+							// it's emitted when `response` is emitted
+							if (uploaded === lastUploaded || uploaded === uploadBodySize) {
+								return;
+							}
+
+							ee.emit('uploadProgress', {
+								percent: uploadBodySize ? uploaded / uploadBodySize : 0,
+								transferred: uploaded,
+								total: uploadBodySize
+							});
+						}, uploadEventFrequency);
+					};
+
+					// Only subscribe to 'connect' event if we're actually connecting a new
+					// socket, otherwise if we're already connected (because this is a
+					// keep-alive connection) do not bother. This is important since we won't
+					// get a 'connect' event for an already connected socket.
+					if (isConnecting) {
+						socket.once('connect', onSocketConnect);
+					} else {
+						onSocketConnect();
+					}
+				}
+			});
+
+			if (opts.gotTimeout) {
+				clearInterval(progressInterval);
+				timedOut(req, opts.gotTimeout);
+			}
+
+			setImmediate(() => {
+				ee.emit('request', req);
+			});
+		});
+	};
+
+	setImmediate(() => {
+		Promise.resolve(getBodySize(opts))
+			.then(size => {
+				uploadBodySize = size;
+
+				if (
+					is.undefined(opts.headers['content-length']) &&
+					is.undefined(opts.headers['transfer-encoding']) &&
+					isFormData(opts.body)
+				) {
+					opts.headers['content-length'] = size;
+				}
+
+				get(opts);
+			})
+			.catch(err => {
+				ee.emit('error', err);
+			});
+	});
+
+	return ee;
+}
+
+function getResponse(res, opts, ee, redirects) {
+	const downloadBodySize = Number(res.headers['content-length']) || null;
+	let downloaded = 0;
+
+	const progressStream = new Transform({
+		transform(chunk, encoding, callback) {
+			downloaded += chunk.length;
+
+			const percent = downloadBodySize ? downloaded / downloadBodySize : 0;
+
+			// Let flush() be responsible for emitting the last event
+			if (percent < 1) {
+				ee.emit('downloadProgress', {
+					percent,
+					transferred: downloaded,
+					total: downloadBodySize
+				});
+			}
+
+			callback(null, chunk);
+		},
+
+		flush(callback) {
+			ee.emit('downloadProgress', {
+				percent: 1,
+				transferred: downloaded,
+				total: downloadBodySize
+			});
+
+			callback();
+		}
+	});
+
+	mimicResponse(res, progressStream);
+	progressStream.redirectUrls = redirects;
+
+	const response = opts.decompress === true &&
+		is.function(decompressResponse) &&
+		opts.method !== 'HEAD' ? decompressResponse(progressStream) : progressStream;
+
+	if (!opts.decompress && ['gzip', 'deflate'].indexOf(res.headers['content-encoding']) !== -1) {
+		opts.encoding = null;
+	}
+
+	ee.emit('response', response);
+
+	ee.emit('downloadProgress', {
+		percent: 0,
+		transferred: 0,
+		total: downloadBodySize
+	});
+
+	res.pipe(progressStream);
+}
+
+function asPromise(opts) {
+	const timeoutFn = requestPromise => opts.gotTimeout && opts.gotTimeout.request ?
+		pTimeout(requestPromise, opts.gotTimeout.request, new got.RequestError({message: 'Request timed out', code: 'ETIMEDOUT'}, opts)) :
+		requestPromise;
+
+	const proxy = new EventEmitter();
+
+	const cancelable = new PCancelable((resolve, reject, onCancel) => {
+		const ee = requestAsEventEmitter(opts);
+		let cancelOnRequest = false;
+
+		onCancel(() => {
+			cancelOnRequest = true;
+		});
+
+		ee.on('request', req => {
+			if (cancelOnRequest) {
+				req.abort();
+			}
+
+			onCancel(() => {
+				req.abort();
+			});
+
+			if (is.nodeStream(opts.body)) {
+				opts.body.pipe(req);
+				opts.body = undefined;
+				return;
+			}
+
+			req.end(opts.body);
+		});
+
+		ee.on('response', res => {
+			const stream = is.null(opts.encoding) ? getStream.buffer(res) : getStream(res, opts);
+
+			stream
+				.catch(err => reject(new got.ReadError(err, opts)))
+				.then(data => {
+					const statusCode = res.statusCode;
+					const limitStatusCode = opts.followRedirect ? 299 : 399;
+
+					res.body = data;
+
+					if (opts.json && res.body) {
+						try {
+							res.body = JSON.parse(res.body);
+						} catch (err) {
+							if (statusCode >= 200 && statusCode < 300) {
+								throw new got.ParseError(err, statusCode, opts, data);
+							}
+						}
+					}
+
+					if (opts.throwHttpErrors && statusCode !== 304 && (statusCode < 200 || statusCode > limitStatusCode)) {
+						throw new got.HTTPError(statusCode, res.statusMessage, res.headers, opts);
+					}
+
+					resolve(res);
+				})
+				.catch(err => {
+					Object.defineProperty(err, 'response', {value: res});
+					reject(err);
+				});
+		});
+
+		ee.once('error', reject);
+		ee.on('redirect', proxy.emit.bind(proxy, 'redirect'));
+		ee.on('uploadProgress', proxy.emit.bind(proxy, 'uploadProgress'));
+		ee.on('downloadProgress', proxy.emit.bind(proxy, 'downloadProgress'));
+	});
+
+	// Preserve backwards-compatibility
+	// TODO: Remove this in the next major version
+	Object.defineProperty(cancelable, 'canceled', {
+		get() {
+			return cancelable.isCanceled;
+		}
+	});
+
+	const promise = timeoutFn(cancelable);
+
+	promise.cancel = cancelable.cancel.bind(cancelable);
+
+	promise.on = (name, fn) => {
+		proxy.on(name, fn);
+		return promise;
+	};
+
+	return promise;
+}
+
+function asStream(opts) {
+	opts.stream = true;
+
+	const input = new PassThrough();
+	const output = new PassThrough();
+	const proxy = duplexer3(input, output);
+	let timeout;
+
+	if (opts.gotTimeout && opts.gotTimeout.request) {
+		timeout = setTimeout(() => {
+			proxy.emit('error', new got.RequestError({message: 'Request timed out', code: 'ETIMEDOUT'}, opts));
+		}, opts.gotTimeout.request);
+	}
+
+	if (opts.json) {
+		throw new Error('Got can not be used as a stream when the `json` option is used');
+	}
+
+	if (opts.body) {
+		proxy.write = () => {
+			throw new Error('Got\'s stream is not writable when the `body` option is used');
+		};
+	}
+
+	const ee = requestAsEventEmitter(opts);
+
+	ee.on('request', req => {
+		proxy.emit('request', req);
+
+		if (is.nodeStream(opts.body)) {
+			opts.body.pipe(req);
+			return;
+		}
+
+		if (opts.body) {
+			req.end(opts.body);
+			return;
+		}
+
+		if (opts.method === 'POST' || opts.method === 'PUT' || opts.method === 'PATCH') {
+			input.pipe(req);
+			return;
+		}
+
+		req.end();
+	});
+
+	ee.on('response', res => {
+		clearTimeout(timeout);
+
+		const statusCode = res.statusCode;
+
+		res.on('error', err => {
+			proxy.emit('error', new got.ReadError(err, opts));
+		});
+
+		res.pipe(output);
+
+		if (opts.throwHttpErrors && statusCode !== 304 && (statusCode < 200 || statusCode > 299)) {
+			proxy.emit('error', new got.HTTPError(statusCode, res.statusMessage, res.headers, opts), null, res);
+			return;
+		}
+
+		proxy.emit('response', res);
+	});
+
+	ee.on('error', proxy.emit.bind(proxy, 'error'));
+	ee.on('redirect', proxy.emit.bind(proxy, 'redirect'));
+	ee.on('uploadProgress', proxy.emit.bind(proxy, 'uploadProgress'));
+	ee.on('downloadProgress', proxy.emit.bind(proxy, 'downloadProgress'));
+
+	return proxy;
+}
+
+function normalizeArguments(url, opts) {
+	if (!is.string(url) && !is.object(url)) {
+		throw new TypeError(`Parameter \`url\` must be a string or object, not ${is(url)}`);
+	} else if (is.string(url)) {
+		url = url.replace(/^unix:/, 'http://$&');
+
+		try {
+			decodeURI(url);
+		} catch (err) {
+			throw new Error('Parameter `url` must contain valid UTF-8 character sequences');
+		}
+
+		url = urlParseLax(url);
+		if (url.auth) {
+			throw new Error('Basic authentication must be done with the `auth` option');
+		}
+	} else if (isURL.lenient(url)) {
+		url = urlToOptions(url);
+	}
+
+	opts = Object.assign(
+		{
+			path: '',
+			retries: 2,
+			cache: false,
+			decompress: true,
+			useElectronNet: false,
+			throwHttpErrors: true
+		},
+		url,
+		{
+			protocol: url.protocol || 'http:' // Override both null/undefined with default protocol
+		},
+		opts
+	);
+
+	const headers = lowercaseKeys(opts.headers);
+	for (const key of Object.keys(headers)) {
+		if (is.nullOrUndefined(headers[key])) {
+			delete headers[key];
+		}
+	}
+
+	opts.headers = Object.assign({
+		'user-agent': `${pkg.name}/${pkg.version} (https://github.com/sindresorhus/got)`
+	}, headers);
+
+	if (opts.decompress && is.undefined(opts.headers['accept-encoding'])) {
+		opts.headers['accept-encoding'] = 'gzip, deflate';
+	}
+
+	const query = opts.query;
+
+	if (query) {
+		if (!is.string(query)) {
+			opts.query = querystring.stringify(query);
+		}
+
+		opts.path = `${opts.path.split('?')[0]}?${opts.query}`;
+		delete opts.query;
+	}
+
+	if (opts.json && is.undefined(opts.headers.accept)) {
+		opts.headers.accept = 'application/json';
+	}
+
+	const body = opts.body;
+	if (is.nullOrUndefined(body)) {
+		opts.method = (opts.method || 'GET').toUpperCase();
+	} else {
+		const headers = opts.headers;
+		if (!is.nodeStream(body) && !is.string(body) && !is.buffer(body) && !(opts.form || opts.json)) {
+			throw new TypeError('The `body` option must be a stream.Readable, string, Buffer or plain Object');
+		}
+
+		const canBodyBeStringified = is.plainObject(body) || is.array(body);
+		if ((opts.form || opts.json) && !canBodyBeStringified) {
+			throw new TypeError('The `body` option must be a plain Object or Array when the `form` or `json` option is used');
+		}
+
+		if (isFormData(body)) {
+			// Special case for https://github.com/form-data/form-data
+			headers['content-type'] = headers['content-type'] || `multipart/form-data; boundary=${body.getBoundary()}`;
+		} else if (opts.form && canBodyBeStringified) {
+			headers['content-type'] = headers['content-type'] || 'application/x-www-form-urlencoded';
+			opts.body = querystring.stringify(body);
+		} else if (opts.json && canBodyBeStringified) {
+			headers['content-type'] = headers['content-type'] || 'application/json';
+			opts.body = JSON.stringify(body);
+		}
+
+		if (is.undefined(headers['content-length']) && is.undefined(headers['transfer-encoding']) && !is.nodeStream(body)) {
+			const length = is.string(opts.body) ? Buffer.byteLength(opts.body) : opts.body.length;
+			headers['content-length'] = length;
+		}
+
+		// Convert buffer to stream to receive upload progress events
+		// see https://github.com/sindresorhus/got/pull/322
+		if (is.buffer(body)) {
+			opts.body = intoStream(body);
+			opts.body._buffer = body;
+		}
+
+		opts.method = (opts.method || 'POST').toUpperCase();
+	}
+
+	if (opts.hostname === 'unix') {
+		const matches = /(.+?):(.+)/.exec(opts.path);
+
+		if (matches) {
+			opts.socketPath = matches[1];
+			opts.path = matches[2];
+			opts.host = null;
+		}
+	}
+
+	if (!is.function(opts.retries)) {
+		const retries = opts.retries;
+
+		opts.retries = (iter, err) => {
+			if (iter > retries || !isRetryAllowed(err)) {
+				return 0;
+			}
+
+			const noise = Math.random() * 100;
+
+			return ((1 << iter) * 1000) + noise;
+		};
+	}
+
+	if (is.undefined(opts.followRedirect)) {
+		opts.followRedirect = true;
+	}
+
+	if (opts.timeout) {
+		if (is.number(opts.timeout)) {
+			opts.gotTimeout = {request: opts.timeout};
+		} else {
+			opts.gotTimeout = opts.timeout;
+		}
+		delete opts.timeout;
+	}
+
+	return opts;
+}
+
+function got(url, opts) {
+	try {
+		const normalizedArgs = normalizeArguments(url, opts);
+
+		if (normalizedArgs.stream) {
+			return asStream(normalizedArgs);
+		}
+
+		return asPromise(normalizedArgs);
+	} catch (err) {
+		return Promise.reject(err);
+	}
+}
+
+got.stream = (url, opts) => asStream(normalizeArguments(url, opts));
+
+const methods = [
+	'get',
+	'post',
+	'put',
+	'patch',
+	'head',
+	'delete'
+];
+
+for (const method of methods) {
+	got[method] = (url, opts) => got(url, Object.assign({}, opts, {method}));
+	got.stream[method] = (url, opts) => got.stream(url, Object.assign({}, opts, {method}));
+}
+
+Object.assign(got, errors);
+
+module.exports = got;
+
+
+/***/ }),
+
+/***/ 5386:
+/***/ ((module) => {
+
+"use strict";
+
+
+const processFn = (fn, opts) => function () {
+	const P = opts.promiseModule;
+	const args = new Array(arguments.length);
+
+	for (let i = 0; i < arguments.length; i++) {
+		args[i] = arguments[i];
+	}
+
+	return new P((resolve, reject) => {
+		if (opts.errorFirst) {
+			args.push(function (err, result) {
+				if (opts.multiArgs) {
+					const results = new Array(arguments.length - 1);
+
+					for (let i = 1; i < arguments.length; i++) {
+						results[i - 1] = arguments[i];
+					}
+
+					if (err) {
+						results.unshift(err);
+						reject(results);
+					} else {
+						resolve(results);
+					}
+				} else if (err) {
+					reject(err);
+				} else {
+					resolve(result);
+				}
+			});
+		} else {
+			args.push(function (result) {
+				if (opts.multiArgs) {
+					const results = new Array(arguments.length - 1);
+
+					for (let i = 0; i < arguments.length; i++) {
+						results[i] = arguments[i];
+					}
+
+					resolve(results);
+				} else {
+					resolve(result);
+				}
+			});
+		}
+
+		fn.apply(this, args);
+	});
+};
+
+module.exports = (obj, opts) => {
+	opts = Object.assign({
+		exclude: [/.+(Sync|Stream)$/],
+		errorFirst: true,
+		promiseModule: Promise
+	}, opts);
+
+	const filter = key => {
+		const match = pattern => typeof pattern === 'string' ? key === pattern : pattern.test(key);
+		return opts.include ? opts.include.some(match) : !opts.exclude.some(match);
+	};
+
+	let ret;
+	if (typeof obj === 'function') {
+		ret = function () {
+			if (opts.excludeMain) {
+				return obj.apply(this, arguments);
+			}
+
+			return processFn(obj, opts).apply(this, arguments);
+		};
+	} else {
+		ret = Object.create(Object.getPrototypeOf(obj));
+	}
+
+	for (const key in obj) { // eslint-disable-line guard-for-in
+		const x = obj[key];
+		ret[key] = typeof x === 'function' && filter(key) ? processFn(x, opts) : x;
+	}
+
+	return ret;
+};
+
+
+/***/ }),
+
 /***/ 7356:
 /***/ ((module) => {
 
@@ -13751,6 +12504,572 @@ module.exports = __nccwpck_require__(8500) && typeof Symbol.toStringTag === 'sym
 
 /***/ }),
 
+/***/ 7282:
+/***/ ((module) => {
+
+"use strict";
+
+// rfc7231 6.1
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var statusCodeCacheableByDefault = [200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501];
+
+// This implementation does not understand partial responses (206)
+var understoodStatuses = [200, 203, 204, 300, 301, 302, 303, 307, 308, 404, 405, 410, 414, 501];
+
+var hopByHopHeaders = { 'connection': true, 'keep-alive': true, 'proxy-authenticate': true, 'proxy-authorization': true, 'te': true, 'trailer': true, 'transfer-encoding': true, 'upgrade': true };
+var excludedFromRevalidationUpdate = {
+    // Since the old body is reused, it doesn't make sense to change properties of the body
+    'content-length': true, 'content-encoding': true, 'transfer-encoding': true,
+    'content-range': true
+};
+
+function parseCacheControl(header) {
+    var cc = {};
+    if (!header) return cc;
+
+    // TODO: When there is more than one value present for a given directive (e.g., two Expires header fields, multiple Cache-Control: max-age directives),
+    // the directive's value is considered invalid. Caches are encouraged to consider responses that have invalid freshness information to be stale
+    var parts = header.trim().split(/\s*,\s*/); // TODO: lame parsing
+    for (var _iterator = parts, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+        var _ref;
+
+        if (_isArray) {
+            if (_i >= _iterator.length) break;
+            _ref = _iterator[_i++];
+        } else {
+            _i = _iterator.next();
+            if (_i.done) break;
+            _ref = _i.value;
+        }
+
+        var part = _ref;
+
+        var _part$split = part.split(/\s*=\s*/, 2),
+            k = _part$split[0],
+            v = _part$split[1];
+
+        cc[k] = v === undefined ? true : v.replace(/^"|"$/g, ''); // TODO: lame unquoting
+    }
+
+    return cc;
+}
+
+function formatCacheControl(cc) {
+    var parts = [];
+    for (var k in cc) {
+        var v = cc[k];
+        parts.push(v === true ? k : k + '=' + v);
+    }
+    if (!parts.length) {
+        return undefined;
+    }
+    return parts.join(', ');
+}
+
+module.exports = function () {
+    function CachePolicy(req, res) {
+        var _ref2 = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
+            shared = _ref2.shared,
+            cacheHeuristic = _ref2.cacheHeuristic,
+            immutableMinTimeToLive = _ref2.immutableMinTimeToLive,
+            ignoreCargoCult = _ref2.ignoreCargoCult,
+            _fromObject = _ref2._fromObject;
+
+        _classCallCheck(this, CachePolicy);
+
+        if (_fromObject) {
+            this._fromObject(_fromObject);
+            return;
+        }
+
+        if (!res || !res.headers) {
+            throw Error("Response headers missing");
+        }
+        this._assertRequestHasHeaders(req);
+
+        this._responseTime = this.now();
+        this._isShared = shared !== false;
+        this._cacheHeuristic = undefined !== cacheHeuristic ? cacheHeuristic : 0.1; // 10% matches IE
+        this._immutableMinTtl = undefined !== immutableMinTimeToLive ? immutableMinTimeToLive : 24 * 3600 * 1000;
+
+        this._status = 'status' in res ? res.status : 200;
+        this._resHeaders = res.headers;
+        this._rescc = parseCacheControl(res.headers['cache-control']);
+        this._method = 'method' in req ? req.method : 'GET';
+        this._url = req.url;
+        this._host = req.headers.host;
+        this._noAuthorization = !req.headers.authorization;
+        this._reqHeaders = res.headers.vary ? req.headers : null; // Don't keep all request headers if they won't be used
+        this._reqcc = parseCacheControl(req.headers['cache-control']);
+
+        // Assume that if someone uses legacy, non-standard uncecessary options they don't understand caching,
+        // so there's no point stricly adhering to the blindly copy&pasted directives.
+        if (ignoreCargoCult && "pre-check" in this._rescc && "post-check" in this._rescc) {
+            delete this._rescc['pre-check'];
+            delete this._rescc['post-check'];
+            delete this._rescc['no-cache'];
+            delete this._rescc['no-store'];
+            delete this._rescc['must-revalidate'];
+            this._resHeaders = Object.assign({}, this._resHeaders, { 'cache-control': formatCacheControl(this._rescc) });
+            delete this._resHeaders.expires;
+            delete this._resHeaders.pragma;
+        }
+
+        // When the Cache-Control header field is not present in a request, caches MUST consider the no-cache request pragma-directive
+        // as having the same effect as if "Cache-Control: no-cache" were present (see Section 5.2.1).
+        if (!res.headers['cache-control'] && /no-cache/.test(res.headers.pragma)) {
+            this._rescc['no-cache'] = true;
+        }
+    }
+
+    CachePolicy.prototype.now = function now() {
+        return Date.now();
+    };
+
+    CachePolicy.prototype.storable = function storable() {
+        // The "no-store" request directive indicates that a cache MUST NOT store any part of either this request or any response to it.
+        return !!(!this._reqcc['no-store'] && (
+        // A cache MUST NOT store a response to any request, unless:
+        // The request method is understood by the cache and defined as being cacheable, and
+        'GET' === this._method || 'HEAD' === this._method || 'POST' === this._method && this._hasExplicitExpiration()) &&
+        // the response status code is understood by the cache, and
+        understoodStatuses.indexOf(this._status) !== -1 &&
+        // the "no-store" cache directive does not appear in request or response header fields, and
+        !this._rescc['no-store'] && (
+        // the "private" response directive does not appear in the response, if the cache is shared, and
+        !this._isShared || !this._rescc.private) && (
+        // the Authorization header field does not appear in the request, if the cache is shared,
+        !this._isShared || this._noAuthorization || this._allowsStoringAuthenticated()) && (
+        // the response either:
+
+        // contains an Expires header field, or
+        this._resHeaders.expires ||
+        // contains a max-age response directive, or
+        // contains a s-maxage response directive and the cache is shared, or
+        // contains a public response directive.
+        this._rescc.public || this._rescc['max-age'] || this._rescc['s-maxage'] ||
+        // has a status code that is defined as cacheable by default
+        statusCodeCacheableByDefault.indexOf(this._status) !== -1));
+    };
+
+    CachePolicy.prototype._hasExplicitExpiration = function _hasExplicitExpiration() {
+        // 4.2.1 Calculating Freshness Lifetime
+        return this._isShared && this._rescc['s-maxage'] || this._rescc['max-age'] || this._resHeaders.expires;
+    };
+
+    CachePolicy.prototype._assertRequestHasHeaders = function _assertRequestHasHeaders(req) {
+        if (!req || !req.headers) {
+            throw Error("Request headers missing");
+        }
+    };
+
+    CachePolicy.prototype.satisfiesWithoutRevalidation = function satisfiesWithoutRevalidation(req) {
+        this._assertRequestHasHeaders(req);
+
+        // When presented with a request, a cache MUST NOT reuse a stored response, unless:
+        // the presented request does not contain the no-cache pragma (Section 5.4), nor the no-cache cache directive,
+        // unless the stored response is successfully validated (Section 4.3), and
+        var requestCC = parseCacheControl(req.headers['cache-control']);
+        if (requestCC['no-cache'] || /no-cache/.test(req.headers.pragma)) {
+            return false;
+        }
+
+        if (requestCC['max-age'] && this.age() > requestCC['max-age']) {
+            return false;
+        }
+
+        if (requestCC['min-fresh'] && this.timeToLive() < 1000 * requestCC['min-fresh']) {
+            return false;
+        }
+
+        // the stored response is either:
+        // fresh, or allowed to be served stale
+        if (this.stale()) {
+            var allowsStale = requestCC['max-stale'] && !this._rescc['must-revalidate'] && (true === requestCC['max-stale'] || requestCC['max-stale'] > this.age() - this.maxAge());
+            if (!allowsStale) {
+                return false;
+            }
+        }
+
+        return this._requestMatches(req, false);
+    };
+
+    CachePolicy.prototype._requestMatches = function _requestMatches(req, allowHeadMethod) {
+        // The presented effective request URI and that of the stored response match, and
+        return (!this._url || this._url === req.url) && this._host === req.headers.host && (
+        // the request method associated with the stored response allows it to be used for the presented request, and
+        !req.method || this._method === req.method || allowHeadMethod && 'HEAD' === req.method) &&
+        // selecting header fields nominated by the stored response (if any) match those presented, and
+        this._varyMatches(req);
+    };
+
+    CachePolicy.prototype._allowsStoringAuthenticated = function _allowsStoringAuthenticated() {
+        //  following Cache-Control response directives (Section 5.2.2) have such an effect: must-revalidate, public, and s-maxage.
+        return this._rescc['must-revalidate'] || this._rescc.public || this._rescc['s-maxage'];
+    };
+
+    CachePolicy.prototype._varyMatches = function _varyMatches(req) {
+        if (!this._resHeaders.vary) {
+            return true;
+        }
+
+        // A Vary header field-value of "*" always fails to match
+        if (this._resHeaders.vary === '*') {
+            return false;
+        }
+
+        var fields = this._resHeaders.vary.trim().toLowerCase().split(/\s*,\s*/);
+        for (var _iterator2 = fields, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
+            var _ref3;
+
+            if (_isArray2) {
+                if (_i2 >= _iterator2.length) break;
+                _ref3 = _iterator2[_i2++];
+            } else {
+                _i2 = _iterator2.next();
+                if (_i2.done) break;
+                _ref3 = _i2.value;
+            }
+
+            var name = _ref3;
+
+            if (req.headers[name] !== this._reqHeaders[name]) return false;
+        }
+        return true;
+    };
+
+    CachePolicy.prototype._copyWithoutHopByHopHeaders = function _copyWithoutHopByHopHeaders(inHeaders) {
+        var headers = {};
+        for (var name in inHeaders) {
+            if (hopByHopHeaders[name]) continue;
+            headers[name] = inHeaders[name];
+        }
+        // 9.1.  Connection
+        if (inHeaders.connection) {
+            var tokens = inHeaders.connection.trim().split(/\s*,\s*/);
+            for (var _iterator3 = tokens, _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _iterator3[Symbol.iterator]();;) {
+                var _ref4;
+
+                if (_isArray3) {
+                    if (_i3 >= _iterator3.length) break;
+                    _ref4 = _iterator3[_i3++];
+                } else {
+                    _i3 = _iterator3.next();
+                    if (_i3.done) break;
+                    _ref4 = _i3.value;
+                }
+
+                var _name = _ref4;
+
+                delete headers[_name];
+            }
+        }
+        if (headers.warning) {
+            var warnings = headers.warning.split(/,/).filter(function (warning) {
+                return !/^\s*1[0-9][0-9]/.test(warning);
+            });
+            if (!warnings.length) {
+                delete headers.warning;
+            } else {
+                headers.warning = warnings.join(',').trim();
+            }
+        }
+        return headers;
+    };
+
+    CachePolicy.prototype.responseHeaders = function responseHeaders() {
+        var headers = this._copyWithoutHopByHopHeaders(this._resHeaders);
+        var age = this.age();
+
+        // A cache SHOULD generate 113 warning if it heuristically chose a freshness
+        // lifetime greater than 24 hours and the response's age is greater than 24 hours.
+        if (age > 3600 * 24 && !this._hasExplicitExpiration() && this.maxAge() > 3600 * 24) {
+            headers.warning = (headers.warning ? `${headers.warning}, ` : '') + '113 - "rfc7234 5.5.4"';
+        }
+        headers.age = `${Math.round(age)}`;
+        return headers;
+    };
+
+    /**
+     * Value of the Date response header or current time if Date was demed invalid
+     * @return timestamp
+     */
+
+
+    CachePolicy.prototype.date = function date() {
+        var dateValue = Date.parse(this._resHeaders.date);
+        var maxClockDrift = 8 * 3600 * 1000;
+        if (Number.isNaN(dateValue) || dateValue < this._responseTime - maxClockDrift || dateValue > this._responseTime + maxClockDrift) {
+            return this._responseTime;
+        }
+        return dateValue;
+    };
+
+    /**
+     * Value of the Age header, in seconds, updated for the current time.
+     * May be fractional.
+     *
+     * @return Number
+     */
+
+
+    CachePolicy.prototype.age = function age() {
+        var age = Math.max(0, (this._responseTime - this.date()) / 1000);
+        if (this._resHeaders.age) {
+            var ageValue = this._ageValue();
+            if (ageValue > age) age = ageValue;
+        }
+
+        var residentTime = (this.now() - this._responseTime) / 1000;
+        return age + residentTime;
+    };
+
+    CachePolicy.prototype._ageValue = function _ageValue() {
+        var ageValue = parseInt(this._resHeaders.age);
+        return isFinite(ageValue) ? ageValue : 0;
+    };
+
+    /**
+     * Value of applicable max-age (or heuristic equivalent) in seconds. This counts since response's `Date`.
+     *
+     * For an up-to-date value, see `timeToLive()`.
+     *
+     * @return Number
+     */
+
+
+    CachePolicy.prototype.maxAge = function maxAge() {
+        if (!this.storable() || this._rescc['no-cache']) {
+            return 0;
+        }
+
+        // Shared responses with cookies are cacheable according to the RFC, but IMHO it'd be unwise to do so by default
+        // so this implementation requires explicit opt-in via public header
+        if (this._isShared && this._resHeaders['set-cookie'] && !this._rescc.public && !this._rescc.immutable) {
+            return 0;
+        }
+
+        if (this._resHeaders.vary === '*') {
+            return 0;
+        }
+
+        if (this._isShared) {
+            if (this._rescc['proxy-revalidate']) {
+                return 0;
+            }
+            // if a response includes the s-maxage directive, a shared cache recipient MUST ignore the Expires field.
+            if (this._rescc['s-maxage']) {
+                return parseInt(this._rescc['s-maxage'], 10);
+            }
+        }
+
+        // If a response includes a Cache-Control field with the max-age directive, a recipient MUST ignore the Expires field.
+        if (this._rescc['max-age']) {
+            return parseInt(this._rescc['max-age'], 10);
+        }
+
+        var defaultMinTtl = this._rescc.immutable ? this._immutableMinTtl : 0;
+
+        var dateValue = this.date();
+        if (this._resHeaders.expires) {
+            var expires = Date.parse(this._resHeaders.expires);
+            // A cache recipient MUST interpret invalid date formats, especially the value "0", as representing a time in the past (i.e., "already expired").
+            if (Number.isNaN(expires) || expires < dateValue) {
+                return 0;
+            }
+            return Math.max(defaultMinTtl, (expires - dateValue) / 1000);
+        }
+
+        if (this._resHeaders['last-modified']) {
+            var lastModified = Date.parse(this._resHeaders['last-modified']);
+            if (isFinite(lastModified) && dateValue > lastModified) {
+                return Math.max(defaultMinTtl, (dateValue - lastModified) / 1000 * this._cacheHeuristic);
+            }
+        }
+
+        return defaultMinTtl;
+    };
+
+    CachePolicy.prototype.timeToLive = function timeToLive() {
+        return Math.max(0, this.maxAge() - this.age()) * 1000;
+    };
+
+    CachePolicy.prototype.stale = function stale() {
+        return this.maxAge() <= this.age();
+    };
+
+    CachePolicy.fromObject = function fromObject(obj) {
+        return new this(undefined, undefined, { _fromObject: obj });
+    };
+
+    CachePolicy.prototype._fromObject = function _fromObject(obj) {
+        if (this._responseTime) throw Error("Reinitialized");
+        if (!obj || obj.v !== 1) throw Error("Invalid serialization");
+
+        this._responseTime = obj.t;
+        this._isShared = obj.sh;
+        this._cacheHeuristic = obj.ch;
+        this._immutableMinTtl = obj.imm !== undefined ? obj.imm : 24 * 3600 * 1000;
+        this._status = obj.st;
+        this._resHeaders = obj.resh;
+        this._rescc = obj.rescc;
+        this._method = obj.m;
+        this._url = obj.u;
+        this._host = obj.h;
+        this._noAuthorization = obj.a;
+        this._reqHeaders = obj.reqh;
+        this._reqcc = obj.reqcc;
+    };
+
+    CachePolicy.prototype.toObject = function toObject() {
+        return {
+            v: 1,
+            t: this._responseTime,
+            sh: this._isShared,
+            ch: this._cacheHeuristic,
+            imm: this._immutableMinTtl,
+            st: this._status,
+            resh: this._resHeaders,
+            rescc: this._rescc,
+            m: this._method,
+            u: this._url,
+            h: this._host,
+            a: this._noAuthorization,
+            reqh: this._reqHeaders,
+            reqcc: this._reqcc
+        };
+    };
+
+    /**
+     * Headers for sending to the origin server to revalidate stale response.
+     * Allows server to return 304 to allow reuse of the previous response.
+     *
+     * Hop by hop headers are always stripped.
+     * Revalidation headers may be added or removed, depending on request.
+     */
+
+
+    CachePolicy.prototype.revalidationHeaders = function revalidationHeaders(incomingReq) {
+        this._assertRequestHasHeaders(incomingReq);
+        var headers = this._copyWithoutHopByHopHeaders(incomingReq.headers);
+
+        // This implementation does not understand range requests
+        delete headers['if-range'];
+
+        if (!this._requestMatches(incomingReq, true) || !this.storable()) {
+            // revalidation allowed via HEAD
+            // not for the same resource, or wasn't allowed to be cached anyway
+            delete headers['if-none-match'];
+            delete headers['if-modified-since'];
+            return headers;
+        }
+
+        /* MUST send that entity-tag in any cache validation request (using If-Match or If-None-Match) if an entity-tag has been provided by the origin server. */
+        if (this._resHeaders.etag) {
+            headers['if-none-match'] = headers['if-none-match'] ? `${headers['if-none-match']}, ${this._resHeaders.etag}` : this._resHeaders.etag;
+        }
+
+        // Clients MAY issue simple (non-subrange) GET requests with either weak validators or strong validators. Clients MUST NOT use weak validators in other forms of request.
+        var forbidsWeakValidators = headers['accept-ranges'] || headers['if-match'] || headers['if-unmodified-since'] || this._method && this._method != 'GET';
+
+        /* SHOULD send the Last-Modified value in non-subrange cache validation requests (using If-Modified-Since) if only a Last-Modified value has been provided by the origin server.
+        Note: This implementation does not understand partial responses (206) */
+        if (forbidsWeakValidators) {
+            delete headers['if-modified-since'];
+
+            if (headers['if-none-match']) {
+                var etags = headers['if-none-match'].split(/,/).filter(function (etag) {
+                    return !/^\s*W\//.test(etag);
+                });
+                if (!etags.length) {
+                    delete headers['if-none-match'];
+                } else {
+                    headers['if-none-match'] = etags.join(',').trim();
+                }
+            }
+        } else if (this._resHeaders['last-modified'] && !headers['if-modified-since']) {
+            headers['if-modified-since'] = this._resHeaders['last-modified'];
+        }
+
+        return headers;
+    };
+
+    /**
+     * Creates new CachePolicy with information combined from the previews response,
+     * and the new revalidation response.
+     *
+     * Returns {policy, modified} where modified is a boolean indicating
+     * whether the response body has been modified, and old cached body can't be used.
+     *
+     * @return {Object} {policy: CachePolicy, modified: Boolean}
+     */
+
+
+    CachePolicy.prototype.revalidatedPolicy = function revalidatedPolicy(request, response) {
+        this._assertRequestHasHeaders(request);
+        if (!response || !response.headers) {
+            throw Error("Response headers missing");
+        }
+
+        // These aren't going to be supported exactly, since one CachePolicy object
+        // doesn't know about all the other cached objects.
+        var matches = false;
+        if (response.status !== undefined && response.status != 304) {
+            matches = false;
+        } else if (response.headers.etag && !/^\s*W\//.test(response.headers.etag)) {
+            // "All of the stored responses with the same strong validator are selected.
+            // If none of the stored responses contain the same strong validator,
+            // then the cache MUST NOT use the new response to update any stored responses."
+            matches = this._resHeaders.etag && this._resHeaders.etag.replace(/^\s*W\//, '') === response.headers.etag;
+        } else if (this._resHeaders.etag && response.headers.etag) {
+            // "If the new response contains a weak validator and that validator corresponds
+            // to one of the cache's stored responses,
+            // then the most recent of those matching stored responses is selected for update."
+            matches = this._resHeaders.etag.replace(/^\s*W\//, '') === response.headers.etag.replace(/^\s*W\//, '');
+        } else if (this._resHeaders['last-modified']) {
+            matches = this._resHeaders['last-modified'] === response.headers['last-modified'];
+        } else {
+            // If the new response does not include any form of validator (such as in the case where
+            // a client generates an If-Modified-Since request from a source other than the Last-Modified
+            // response header field), and there is only one stored response, and that stored response also
+            // lacks a validator, then that stored response is selected for update.
+            if (!this._resHeaders.etag && !this._resHeaders['last-modified'] && !response.headers.etag && !response.headers['last-modified']) {
+                matches = true;
+            }
+        }
+
+        if (!matches) {
+            return {
+                policy: new this.constructor(request, response),
+                modified: true
+            };
+        }
+
+        // use other header fields provided in the 304 (Not Modified) response to replace all instances
+        // of the corresponding header fields in the stored response.
+        var headers = {};
+        for (var k in this._resHeaders) {
+            headers[k] = k in response.headers && !excludedFromRevalidationUpdate[k] ? response.headers[k] : this._resHeaders[k];
+        }
+
+        var newResponse = Object.assign({}, response, {
+            status: this._status,
+            method: this._method,
+            headers
+        });
+        return {
+            policy: new this.constructor(request, newResponse),
+            modified: false
+        };
+    };
+
+    return CachePolicy;
+}();
+
+/***/ }),
+
 /***/ 4124:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -14132,6 +13451,178 @@ module.exports = isURL;
 
 /***/ }),
 
+/***/ 2820:
+/***/ ((__unused_webpack_module, exports) => {
+
+//TODO: handle reviver/dehydrate function like normal
+//and handle indentation, like normal.
+//if anyone needs this... please send pull request.
+
+exports.stringify = function stringify (o) {
+  if('undefined' == typeof o) return o
+
+  if(o && Buffer.isBuffer(o))
+    return JSON.stringify(':base64:' + o.toString('base64'))
+
+  if(o && o.toJSON)
+    o =  o.toJSON()
+
+  if(o && 'object' === typeof o) {
+    var s = ''
+    var array = Array.isArray(o)
+    s = array ? '[' : '{'
+    var first = true
+
+    for(var k in o) {
+      var ignore = 'function' == typeof o[k] || (!array && 'undefined' === typeof o[k])
+      if(Object.hasOwnProperty.call(o, k) && !ignore) {
+        if(!first)
+          s += ','
+        first = false
+        if (array) {
+          if(o[k] == undefined)
+            s += 'null'
+          else
+            s += stringify(o[k])
+        } else if (o[k] !== void(0)) {
+          s += stringify(k) + ':' + stringify(o[k])
+        }
+      }
+    }
+
+    s += array ? ']' : '}'
+
+    return s
+  } else if ('string' === typeof o) {
+    return JSON.stringify(/^:/.test(o) ? ':' + o : o)
+  } else if ('undefined' === typeof o) {
+    return 'null';
+  } else
+    return JSON.stringify(o)
+}
+
+exports.parse = function (s) {
+  return JSON.parse(s, function (key, value) {
+    if('string' === typeof value) {
+      if(/^:base64:/.test(value))
+        return new Buffer(value.substring(8), 'base64')
+      else
+        return /^:/.test(value) ? value.substring(1) : value 
+    }
+    return value
+  })
+}
+
+
+/***/ }),
+
+/***/ 1531:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const EventEmitter = __nccwpck_require__(2361);
+const JSONB = __nccwpck_require__(2820);
+
+const loadStore = opts => {
+	const adapters = {
+		redis: '@keyv/redis',
+		mongodb: '@keyv/mongo',
+		mongo: '@keyv/mongo',
+		sqlite: '@keyv/sqlite',
+		postgresql: '@keyv/postgres',
+		postgres: '@keyv/postgres',
+		mysql: '@keyv/mysql'
+	};
+	if (opts.adapter || opts.uri) {
+		const adapter = opts.adapter || /^[^:]*/.exec(opts.uri)[0];
+		return new (require(adapters[adapter]))(opts);
+	}
+	return new Map();
+};
+
+class Keyv extends EventEmitter {
+	constructor(uri, opts) {
+		super();
+		this.opts = Object.assign(
+			{ namespace: 'keyv' },
+			(typeof uri === 'string') ? { uri } : uri,
+			opts
+		);
+
+		if (!this.opts.store) {
+			const adapterOpts = Object.assign({}, this.opts);
+			this.opts.store = loadStore(adapterOpts);
+		}
+
+		if (typeof this.opts.store.on === 'function') {
+			this.opts.store.on('error', err => this.emit('error', err));
+		}
+
+		this.opts.store.namespace = this.opts.namespace;
+	}
+
+	_getKeyPrefix(key) {
+		return `${this.opts.namespace}:${key}`;
+	}
+
+	get(key) {
+		key = this._getKeyPrefix(key);
+		const store = this.opts.store;
+		return Promise.resolve()
+			.then(() => store.get(key))
+			.then(data => {
+				data = (typeof data === 'string') ? JSONB.parse(data) : data;
+				if (data === undefined) {
+					return undefined;
+				}
+				if (typeof data.expires === 'number' && Date.now() > data.expires) {
+					this.delete(key);
+					return undefined;
+				}
+				return data.value;
+			});
+	}
+
+	set(key, value, ttl) {
+		key = this._getKeyPrefix(key);
+		if (typeof ttl === 'undefined') {
+			ttl = this.opts.ttl;
+		}
+		if (ttl === 0) {
+			ttl = undefined;
+		}
+		const store = this.opts.store;
+
+		return Promise.resolve()
+			.then(() => {
+				const expires = (typeof ttl === 'number') ? (Date.now() + ttl) : null;
+				value = { value, expires };
+				return store.set(key, JSONB.stringify(value), ttl);
+			})
+			.then(() => true);
+	}
+
+	delete(key) {
+		key = this._getKeyPrefix(key);
+		const store = this.opts.store;
+		return Promise.resolve()
+			.then(() => store.delete(key));
+	}
+
+	clear() {
+		const store = this.opts.store;
+		return Promise.resolve()
+			.then(() => store.clear());
+	}
+}
+
+module.exports = Keyv;
+
+
+/***/ }),
+
 /***/ 5215:
 /***/ ((module) => {
 
@@ -14246,6 +13737,25 @@ function init(open, close) {
 }
 
 module.exports = $;
+
+
+/***/ }),
+
+/***/ 9662:
+/***/ ((module) => {
+
+"use strict";
+
+module.exports = function (obj) {
+	var ret = {};
+	var keys = Object.keys(Object(obj));
+
+	for (var i = 0; i < keys.length; i++) {
+		ret[keys[i].toLowerCase()] = obj[keys[i]];
+	}
+
+	return ret;
+};
 
 
 /***/ }),
@@ -14728,6 +14238,240 @@ module.exports = (fromStream, toStream) => {
 
 /***/ }),
 
+/***/ 7952:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const url = __nccwpck_require__(7310);
+const punycode = __nccwpck_require__(5477);
+const queryString = __nccwpck_require__(293);
+const prependHttp = __nccwpck_require__(6143);
+const sortKeys = __nccwpck_require__(4376);
+
+const DEFAULT_PORTS = {
+	'http:': 80,
+	'https:': 443,
+	'ftp:': 21
+};
+
+// Protocols that always contain a `//`` bit
+const slashedProtocol = {
+	http: true,
+	https: true,
+	ftp: true,
+	gopher: true,
+	file: true,
+	'http:': true,
+	'https:': true,
+	'ftp:': true,
+	'gopher:': true,
+	'file:': true
+};
+
+function testParameter(name, filters) {
+	return filters.some(filter => filter instanceof RegExp ? filter.test(name) : filter === name);
+}
+
+module.exports = (str, opts) => {
+	opts = Object.assign({
+		normalizeProtocol: true,
+		normalizeHttps: false,
+		stripFragment: true,
+		stripWWW: true,
+		removeQueryParameters: [/^utm_\w+/i],
+		removeTrailingSlash: true,
+		removeDirectoryIndex: false,
+		sortQueryParameters: true
+	}, opts);
+
+	if (typeof str !== 'string') {
+		throw new TypeError('Expected a string');
+	}
+
+	const hasRelativeProtocol = str.startsWith('//');
+
+	// Prepend protocol
+	str = prependHttp(str.trim()).replace(/^\/\//, 'http://');
+
+	const urlObj = url.parse(str);
+
+	if (opts.normalizeHttps && urlObj.protocol === 'https:') {
+		urlObj.protocol = 'http:';
+	}
+
+	if (!urlObj.hostname && !urlObj.pathname) {
+		throw new Error('Invalid URL');
+	}
+
+	// Prevent these from being used by `url.format`
+	delete urlObj.host;
+	delete urlObj.query;
+
+	// Remove fragment
+	if (opts.stripFragment) {
+		delete urlObj.hash;
+	}
+
+	// Remove default port
+	const port = DEFAULT_PORTS[urlObj.protocol];
+	if (Number(urlObj.port) === port) {
+		delete urlObj.port;
+	}
+
+	// Remove duplicate slashes
+	if (urlObj.pathname) {
+		urlObj.pathname = urlObj.pathname.replace(/\/{2,}/g, '/');
+	}
+
+	// Decode URI octets
+	if (urlObj.pathname) {
+		urlObj.pathname = decodeURI(urlObj.pathname);
+	}
+
+	// Remove directory index
+	if (opts.removeDirectoryIndex === true) {
+		opts.removeDirectoryIndex = [/^index\.[a-z]+$/];
+	}
+
+	if (Array.isArray(opts.removeDirectoryIndex) && opts.removeDirectoryIndex.length > 0) {
+		let pathComponents = urlObj.pathname.split('/');
+		const lastComponent = pathComponents[pathComponents.length - 1];
+
+		if (testParameter(lastComponent, opts.removeDirectoryIndex)) {
+			pathComponents = pathComponents.slice(0, pathComponents.length - 1);
+			urlObj.pathname = pathComponents.slice(1).join('/') + '/';
+		}
+	}
+
+	// Resolve relative paths, but only for slashed protocols
+	if (slashedProtocol[urlObj.protocol]) {
+		const domain = urlObj.protocol + '//' + urlObj.hostname;
+		const relative = url.resolve(domain, urlObj.pathname);
+		urlObj.pathname = relative.replace(domain, '');
+	}
+
+	if (urlObj.hostname) {
+		// IDN to Unicode
+		urlObj.hostname = punycode.toUnicode(urlObj.hostname).toLowerCase();
+
+		// Remove trailing dot
+		urlObj.hostname = urlObj.hostname.replace(/\.$/, '');
+
+		// Remove `www.`
+		if (opts.stripWWW) {
+			urlObj.hostname = urlObj.hostname.replace(/^www\./, '');
+		}
+	}
+
+	// Remove URL with empty query string
+	if (urlObj.search === '?') {
+		delete urlObj.search;
+	}
+
+	const queryParameters = queryString.parse(urlObj.search);
+
+	// Remove query unwanted parameters
+	if (Array.isArray(opts.removeQueryParameters)) {
+		for (const key in queryParameters) {
+			if (testParameter(key, opts.removeQueryParameters)) {
+				delete queryParameters[key];
+			}
+		}
+	}
+
+	// Sort query parameters
+	if (opts.sortQueryParameters) {
+		urlObj.search = queryString.stringify(sortKeys(queryParameters));
+	}
+
+	// Decode query parameters
+	if (urlObj.search !== null) {
+		urlObj.search = decodeURIComponent(urlObj.search);
+	}
+
+	// Take advantage of many of the Node `url` normalizations
+	str = url.format(urlObj);
+
+	// Remove ending `/`
+	if (opts.removeTrailingSlash || urlObj.pathname === '/') {
+		str = str.replace(/\/$/, '');
+	}
+
+	// Restore relative protocol, if applicable
+	if (hasRelativeProtocol && !opts.normalizeProtocol) {
+		str = str.replace(/^http:\/\//, '//');
+	}
+
+	return str;
+};
+
+
+/***/ }),
+
+/***/ 4376:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+const isPlainObj = __nccwpck_require__(864);
+
+module.exports = (obj, opts) => {
+	if (!isPlainObj(obj)) {
+		throw new TypeError('Expected a plain object');
+	}
+
+	opts = opts || {};
+
+	// DEPRECATED
+	if (typeof opts === 'function') {
+		throw new TypeError('Specify the compare function as an option instead');
+	}
+
+	const deep = opts.deep;
+	const seenInput = [];
+	const seenOutput = [];
+
+	const sortKeys = x => {
+		const seenIndex = seenInput.indexOf(x);
+
+		if (seenIndex !== -1) {
+			return seenOutput[seenIndex];
+		}
+
+		const ret = {};
+		const keys = Object.keys(x).sort(opts.compare);
+
+		seenInput.push(x);
+		seenOutput.push(ret);
+
+		for (let i = 0; i < keys.length; i++) {
+			const key = keys[i];
+			const val = x[key];
+
+			if (deep && Array.isArray(val)) {
+				const retArr = [];
+
+				for (let j = 0; j < val.length; j++) {
+					retArr[j] = isPlainObj(val[j]) ? sortKeys(val[j]) : val[j];
+				}
+
+				ret[key] = retArr;
+				continue;
+			}
+
+			ret[key] = deep && isPlainObj(val) ? sortKeys(val) : val;
+		}
+
+		return ret;
+	};
+
+	return sortKeys(obj);
+};
+
+
+/***/ }),
+
 /***/ 1763:
 /***/ ((module) => {
 
@@ -14871,6 +14615,102 @@ function onceStrict (fn) {
   f.called = false
   return f
 }
+
+
+/***/ }),
+
+/***/ 9072:
+/***/ ((module) => {
+
+"use strict";
+
+
+class CancelError extends Error {
+	constructor() {
+		super('Promise was canceled');
+		this.name = 'CancelError';
+	}
+
+	get isCanceled() {
+		return true;
+	}
+}
+
+class PCancelable {
+	static fn(userFn) {
+		return function () {
+			const args = [].slice.apply(arguments);
+			return new PCancelable((resolve, reject, onCancel) => {
+				args.push(onCancel);
+				userFn.apply(null, args).then(resolve, reject);
+			});
+		};
+	}
+
+	constructor(executor) {
+		this._cancelHandlers = [];
+		this._isPending = true;
+		this._isCanceled = false;
+
+		this._promise = new Promise((resolve, reject) => {
+			this._reject = reject;
+
+			return executor(
+				value => {
+					this._isPending = false;
+					resolve(value);
+				},
+				error => {
+					this._isPending = false;
+					reject(error);
+				},
+				handler => {
+					this._cancelHandlers.push(handler);
+				}
+			);
+		});
+	}
+
+	then(onFulfilled, onRejected) {
+		return this._promise.then(onFulfilled, onRejected);
+	}
+
+	catch(onRejected) {
+		return this._promise.catch(onRejected);
+	}
+
+	finally(onFinally) {
+		return this._promise.finally(onFinally);
+	}
+
+	cancel() {
+		if (!this._isPending || this._isCanceled) {
+			return;
+		}
+
+		if (this._cancelHandlers.length > 0) {
+			try {
+				for (const handler of this._cancelHandlers) {
+					handler();
+				}
+			} catch (err) {
+				this._reject(err);
+			}
+		}
+
+		this._isCanceled = true;
+		this._reject(new CancelError());
+	}
+
+	get isCanceled() {
+		return this._isCanceled;
+	}
+}
+
+Object.setPrototypeOf(PCancelable.prototype, Promise.prototype);
+
+module.exports = PCancelable;
+module.exports.CancelError = CancelError;
 
 
 /***/ }),
@@ -18617,6 +18457,48 @@ if (process.env.READABLE_STREAM === 'disable' && Stream) {
   exports.Transform = __nccwpck_require__(4415);
   exports.PassThrough = __nccwpck_require__(1542);
 }
+
+
+/***/ }),
+
+/***/ 9004:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+"use strict";
+
+
+const Readable = (__nccwpck_require__(2781).Readable);
+const lowercaseKeys = __nccwpck_require__(9662);
+
+class Response extends Readable {
+	constructor(statusCode, headers, body, url) {
+		if (typeof statusCode !== 'number') {
+			throw new TypeError('Argument `statusCode` should be a number');
+		}
+		if (typeof headers !== 'object') {
+			throw new TypeError('Argument `headers` should be an object');
+		}
+		if (!(body instanceof Buffer)) {
+			throw new TypeError('Argument `body` should be a buffer');
+		}
+		if (typeof url !== 'string') {
+			throw new TypeError('Argument `url` should be a string');
+		}
+
+		super();
+		this.statusCode = statusCode;
+		this.headers = lowercaseKeys(headers);
+		this.body = body;
+		this.url = url;
+	}
+
+	_read() {
+		this.push(this.body);
+		this.push(null);
+	}
+}
+
+module.exports = Response;
 
 
 /***/ }),
@@ -25135,17 +25017,23 @@ async function main() {
     const dir = core.getInput("working-directory");
     (0, logger_1.info)("installRojo     ", `Installing version ${version}...`);
     await (0, download_1.default)(url, name, { extract: true }).then(() => {
-        if (process.platform == "linux") {
-            (0, child_process_1.exec)(`mv ${name}/rojo ${dir} && rm -rf ${name}`);
-            (0, logger_1.success)("installRojo     ", `Installed ${name}!`);
+        try {
+            if (process.platform == "linux") {
+                (0, child_process_1.exec)(`mv ${name}/rojo ${dir} && rm -rf ${name}`);
+                (0, logger_1.success)("installRojo     ", `Installed ${name}!`);
+            }
+            if (process.platform == "darwin") {
+                (0, child_process_1.exec)(`mv ${name}/rojo ${dir} && rm -rf ${name}`);
+                (0, logger_1.success)("installRojo     ", `Installed ${name}!`);
+            }
+            if (process.platform == "win32") {
+                (0, child_process_1.exec)(`move ${path_1.default.join(".", name, "rojo.exe")} ${dir} && del /f ${path_1.default.join(".", name)}`);
+                (0, logger_1.success)("installRojo     ", `Installed ${name}!`);
+            }
         }
-        if (process.platform == "darwin") {
-            (0, child_process_1.exec)(`mv ${name}/rojo ${dir} && rm -rf ${name}`);
-            (0, logger_1.success)("installRojo     ", `Installed ${name}!`);
-        }
-        if (process.platform == "win32") {
-            (0, child_process_1.exec)(`move ${path_1.default.join(".", name, "rojo.exe")} ${dir} && del /f ${path_1.default.join(".", name)}`);
-            (0, logger_1.success)("installRojo     ", `Installed ${name}!`);
+        catch (e) {
+            Promise.resolve(false);
+            return false;
         }
     });
     Promise.resolve(true);
@@ -29219,7 +29107,7 @@ module.exports = axios;
 
 /***/ }),
 
-/***/ 8244:
+/***/ 4046:
 /***/ ((module) => {
 
 "use strict";
