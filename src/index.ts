@@ -12,7 +12,7 @@ const dir = core.getInput("working-directory")
 const execCallback = (stdout: string, stderr: string, err?: ExecException|null) => {
     if (err) {
         error("buildProject    ", `${err.message}`);
-        throw new Error("Failed to build. Set $ACTIONS_BACKTRACE=1 to receive a backtrace.");
+        throw new Error("Failed to build. Set $ACTIONS_BACKTRACE=1 or enable actions debug mode to receive a backtrace.");
     }
 
     if ((process.env.ACTIONS_BACKTRACE == "1" || core.isDebug()) && err) {
