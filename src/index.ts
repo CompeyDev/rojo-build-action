@@ -2,7 +2,6 @@ import * as core from '@actions/core';
 import { exec, ExecException } from 'child_process';
 import { error, info, success } from '../utils/logger';
 import init from '../lib/installRojo';
-import download from 'download';
 import path from 'path';
 
 
@@ -16,7 +15,7 @@ const execCallback = (stdout: string, stderr: string, err?: ExecException|null) 
         throw new Error("Failed to build. Set $ACTIONS_BACKTRACE=1 to receive a backtrace.");
     }
 
-    if (process.env.ACTIONS_BACKTRACE == "1" && err) {
+    if ((process.env.ACTIONS_BACKTRACE == "1" || core.isDebug()) && err) {
         error("buildProject    ", `Backtrace:- ${stdout} + Error:- ${stderr}`)
         throw new Error("Failed to build.");
     }
@@ -31,7 +30,7 @@ function main(output: string, type: string) {
     if (!output) {
         throw new Error("No output file provided!")
     }
-    
+
     if (output && type) {
         if (process.platform == "win32") {
             info("buildProject    ", "Building...")
@@ -46,7 +45,7 @@ function main(output: string, type: string) {
                 execCallback(stdout, stderr, err);
             })
         }
-       
+
     }
 }
 
