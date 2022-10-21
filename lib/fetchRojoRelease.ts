@@ -1,9 +1,11 @@
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 import { info } from '../utils/logger';
+import { RojoReleaseData } from './types/types'
 
 
-export default async function main(): Promise<{ version: string, download: string, artifact_name: string, raw: AxiosResponse }> {
-    const data = (await axios.get("https://api.github.com/repos/rojo-rbx/rojo/releases/latest")).data
+
+export default async function main(): Promise<{ version: string, download: string, artifact_name: string, raw: RojoReleaseData }> {
+    const data: RojoReleaseData = (await axios.get("https://api.github.com/repos/rojo-rbx/rojo/releases/latest")).data
     const version = data.name
     if (process.platform == "linux") {
         const url = data.assets[0].browser_download_url
@@ -32,5 +34,5 @@ export default async function main(): Promise<{ version: string, download: strin
     } else {
         return { version: "UNKNOWN_PLATFORM", download: "UNKNOWN_PLATFORM", artifact_name: "UNKNOWN_PLATFORM", raw: data }
     }
-    
+
 }
