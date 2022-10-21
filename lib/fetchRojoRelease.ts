@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { info } from '../utils/logger';
-import { RojoReleaseData } from './types/types'
+import { RojoReleaseData, RojoReleaseFetched } from './types/types'
 
 
 
-export default async function main(): Promise<{ version: string, download: string, artifact_name: string, raw: RojoReleaseData }> {
+export default async function main(): Promise<RojoReleaseFetched> {
     const data: RojoReleaseData = (await axios.get("https://api.github.com/repos/rojo-rbx/rojo/releases/latest")).data
     const version = data.name
     if (process.platform == "linux") {
